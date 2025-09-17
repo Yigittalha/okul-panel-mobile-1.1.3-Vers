@@ -1,0 +1,573 @@
+import React, { useContext, useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  ScrollView,
+  Platform,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import api, { getUploadUrl, fetchUserInfo } from "../../lib/api";
+import { SessionContext } from "../../state/session";
+import { useTheme } from "../../state/theme";
+import { useSlideMenu } from "../../navigation/SlideMenuContext";
+import RefreshableScrollView from "../../components/RefreshableScrollView";
+
+const ParentDashboard = () => {
+  const navigation = useNavigation();
+  const { schoolCode, clearSession } = useContext(SessionContext);
+  const { theme, isDark, toggleTheme } = useTheme();
+  const { openMenu } = useSlideMenu();
+  const [studentData, setStudentData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Fetch data only once on mount
+  useEffect(() => {
+    fetchStudentData();
+  }, []);
+
+  const fetchStudentData = async () => {
+    try {
+      const data = await fetchUserInfo(true); // showErrors true olarak ayarlandı
+
+      if (data) {
+        // Use the user info directly
+        setStudentData(data);
+        setError(null); // Hata durumunu temizle
+        
+        // FCM token'ı backend'e gönder (login sonrası)
+        if (global.sendFCMTokenAfterLogin) {
+          console.log('🔥 Öğrenci girişi başarılı, FCM token gönderiliyor...');
+          global.sendFCMTokenAfterLogin(data);
+        }
+      } else {
+        setError("Öğrenci bilgileri alınamadı. Lütfen tekrar giriş yapın.");
+
+        // Oturumu sonlandır
+        setTimeout(() => {
+          clearSession();
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Öğrenci bilgileri alınırken hata:", error);
+      setError("Sistem hatası oluştu. Lütfen tekrar giriş yapın.");
+
+      // Oturumu sonlandır
+      setTimeout(() => {
+        clearSession();
+      }, 2000);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchStudentData();
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("tr-TR");
+  };
+
+  const getGenderText = (gender) => {
+    return gender === true || gender === "1" ? "Erkek" : "Kız";
+  };
+
+  const getStudentPhotoUrl = () => {
+    try {
+      if (!studentData) {
+        return null;
+      }
+
+      if (!studentData?.Fotograf) {
+        return null;
+      }
+
+      // Fotoğraf string'i geldi mi kontrol et
+      if (
+        typeof studentData.Fotograf !== "string" ||
+        studentData.Fotograf.trim() === ""
+      ) {
+        return null;
+      }
+
+      const photoUrl = getUploadUrl(studentData.Fotograf, schoolCode);
+
+      // URL oluşturulduysa kullan, yoksa null döndür
+      if (!photoUrl) {
+        return null;
+      }
+
+      return photoUrl;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  if (loading) {
+    return (
+      <View
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
+        <ActivityIndicator size="large" color={theme.accent} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>
+          Veriler yükleniyor...
+        </Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
+        <Text style={[styles.errorText, { color: theme.danger }]}>{error}</Text>
+      </View>
+    );
+  }
+
+  if (!studentData) {
+    return (
+      <View
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
+        <Text style={[styles.loadingText, { color: theme.text }]}>
+          Öğrenci bilgileri bulunamadı
+        </Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: theme.accent }]}
+          onPress={fetchStudentData}
+        >
+          <Text style={[styles.retryText, { color: theme.primary }]}>
+            Tekrar Dene
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => openMenu("ParentDashboard")}
+        >
+          <Text style={[styles.menuIcon, { color: theme.text }]}>☰</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.headerTitle, { color: theme.text }]}>
+          Öğrenci Bilgileri
+        </Text>
+
+      </View>
+
+      <RefreshableScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+      >
+        <View
+          style={[
+            styles.studentCard,
+            { backgroundColor: theme.card, borderColor: theme.accent },
+          ]}
+        >
+          {/* Student photo display */}
+          <View style={styles.avatarContainer}>
+            {(() => {
+              const photoUrl = getStudentPhotoUrl();
+
+              if (photoUrl) {
+                return (
+                  <Image source={{ uri: photoUrl }} style={styles.userPhoto} />
+                );
+              } else {
+                return (
+                  <View
+                    style={[styles.avatar, { backgroundColor: theme.accent }]}
+                  >
+                    <Text style={styles.avatarText}>
+                      {getGenderText(studentData?.Cinsiyet) === "Erkek"
+                        ? "👦"
+                        : "👧"}
+                    </Text>
+                  </View>
+                );
+              }
+            })()}
+          </View>
+
+          <Text style={[styles.studentName, { color: theme.text }]}>
+            {studentData?.AdSoyad}
+          </Text>
+          <Text style={[styles.classInfo, { color: theme.text }]}>
+            📚 {studentData?.Sinif} - No: {studentData?.OgrenciNumara}
+          </Text>
+
+          {schoolCode && (
+            <View
+              style={[styles.schoolBadge, { backgroundColor: theme.accent }]}
+            >
+              <Text style={[styles.schoolText, { color: theme.primary }]}>
+                🏫 {schoolCode}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <View style={[styles.infoCard, { backgroundColor: theme.card }]}>
+          <Text style={[styles.cardTitle, { color: theme.text }]}>
+            👤 Öğrenci Bilgileri
+          </Text>
+
+          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
+            <Text style={[styles.infoLabel, { color: theme.text }]}>
+              🆔 TC Kimlik:
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.text }]}>
+              {studentData?.TCKimlikNo}
+            </Text>
+          </View>
+
+          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
+            <Text style={[styles.infoLabel, { color: theme.text }]}>
+              👤 Cinsiyet:
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.text }]}>
+              {getGenderText(studentData?.Cinsiyet)}
+            </Text>
+          </View>
+
+          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
+            <Text style={[styles.infoLabel, { color: theme.text }]}>
+              🎂 Doğum Tarihi:
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.text }]}>
+              {formatDate(studentData?.DogumTarihi)}
+            </Text>
+          </View>
+
+          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
+            <Text style={[styles.infoLabel, { color: theme.text }]}>
+              🏥 Sağlık Durumu:
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.text }]}>
+              {studentData?.Sag}
+            </Text>
+          </View>
+
+          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
+            <Text style={[styles.infoLabel, { color: theme.text }]}>
+              ♿ Engel Durumu:
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.text }]}>
+              {studentData?.Engel ? "Var" : "Yok"}
+            </Text>
+          </View>
+        </View>
+
+        <View style={[styles.familyCard, { backgroundColor: theme.card }]}>
+          <Text style={[styles.cardTitle, { color: theme.text }]}>
+            👨‍👩‍👧‍👦 Aile Bilgileri
+          </Text>
+
+          <View
+            style={[styles.parentSection, { borderBottomColor: theme.border }]}
+          >
+            <Text style={[styles.parentTitle, { color: theme.text }]}>
+              👩 Anne Bilgileri
+            </Text>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: theme.text }]}>
+                📝 Ad Soyad:
+              </Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {studentData?.AnneAdSoyad}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: theme.text }]}>
+                🎓 Eğitim:
+              </Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {studentData?.AnneEgitim}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: theme.text }]}>
+                💼 Meslek:
+              </Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {studentData?.AnneMeslek}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: theme.text }]}>
+                📱 Telefon:
+              </Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {studentData?.AnneTel}
+              </Text>
+            </View>
+          </View>
+
+          <View
+            style={[styles.parentSection, { borderBottomColor: theme.border }]}
+          >
+            <Text style={[styles.parentTitle, { color: theme.text }]}>
+              👨 Baba Bilgileri
+            </Text>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: theme.text }]}>
+                📝 Ad Soyad:
+              </Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {studentData?.BabaAdSoyad}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: theme.text }]}>
+                🎓 Eğitim:
+              </Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {studentData?.BabaEgitim}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: theme.text }]}>
+                💼 Meslek:
+              </Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {studentData?.BabaMeslek}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: theme.text }]}>
+                📱 Telefon:
+              </Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {studentData?.BabaTel}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.text }]}>
+              💰 Aylık Gelir:
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.text }]}>
+              {studentData?.AylikGelir} ₺
+            </Text>
+          </View>
+        </View>
+
+        {studentData?.SuregenRahatsizlik &&
+          studentData?.SuregenRahatsizlik !== "Yok" && (
+            <View style={styles.healthCard}>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>
+                🏥 Sağlık Bilgileri
+              </Text>
+              <View style={styles.infoRow}>
+                <Text style={[styles.infoLabel, { color: theme.text }]}>
+                  ⚕️ Süreğen Rahatsızlık:
+                </Text>
+                <Text style={[styles.infoValue, { color: theme.text }]}>
+                  {studentData?.SuregenRahatsizlik}
+                </Text>
+              </View>
+            </View>
+          )}
+
+        {/* Şifre Değiştir Butonu */}
+        <TouchableOpacity
+          style={[styles.passwordButton, { backgroundColor: theme.accent }]}
+          onPress={() => navigation.navigate("PasswordChange")}
+        >
+          <Text style={[styles.passwordButtonText, { color: theme.primary }]}>
+            🔐 Şifreyi Değiştir
+          </Text>
+        </TouchableOpacity>
+      </RefreshableScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 10,
+  },
+  retryButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  retryText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 45 : 35,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+  },
+  menuButton: {
+    padding: 10,
+  },
+  menuIcon: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  studentCard: {
+    borderWidth: 2,
+    borderRadius: 20,
+    padding: 25,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  avatarContainer: {
+    marginBottom: 15,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  userPhoto: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: "#FFD60A",
+  },
+  avatarText: {
+    fontSize: 40,
+  },
+  studentName: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  classInfo: {
+    fontSize: 16,
+    opacity: 0.8,
+    marginBottom: 10,
+  },
+  schoolBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  schoolText: {
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  infoCard: {
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+  },
+  familyCard: {
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+  },
+  healthCard: {
+    backgroundColor: "rgba(255, 100, 100, 0.1)",
+    borderWidth: 1,
+    borderColor: "#ff6b6b",
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  parentSection: {
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+  },
+  parentTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  infoLabel: {
+    fontSize: 13,
+    opacity: 0.8,
+    flex: 1,
+  },
+  infoValue: {
+    fontSize: 13,
+    fontWeight: "600",
+    flex: 1,
+    textAlign: "right",
+  },
+  errorText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    padding: 20,
+  },
+  passwordButton: {
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  passwordButtonText: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
+
+export default ParentDashboard;
