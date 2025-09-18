@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SessionProvider } from "./src/state/session";
 import { ThemeProvider, useTheme } from "./src/state/theme";
 import { SlideMenuProvider } from "./src/navigation/SlideMenuContext";
@@ -373,13 +374,15 @@ const AppContent = () => {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <SessionProvider>
-        <SlideMenuProvider>
-          <AppContent />
-        </SlideMenuProvider>
-      </SessionProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <SessionProvider>
+          <SlideMenuProvider>
+            <AppContent />
+          </SlideMenuProvider>
+        </SessionProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 
