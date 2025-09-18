@@ -19,10 +19,9 @@ target 'OkulPanel' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  # libdav1d: SDWebImage Xcode wrapper'ı — build ayarlarına DOKUNMA
-  pod 'libdav1d', :git => 'https://github.com/SDWebImage/libdav1d-Xcode.git'
-
-  # (Varsa AVIF için libavif/SDWebImageAVIFCoder kullanımı burada kalabilir; dav1d ile çakışmaz.)
+  # AVIF desteği: libavif + aom decoder (libdav1d yerine)
+  pod 'libavif/core'           # libavif çekirdeği
+  pod 'SDWebImageAVIFCoder'    # AVIF coder
 
   pre_install do |installer|
     # Firebase & Google zinciri: static framework + modül
@@ -35,8 +34,6 @@ target 'OkulPanel' do
         nanopb abseil
       ].any? { |p| name.start_with?(p) }
         def pod.build_type; Pod::BuildType.static_framework end
-        pod.user_target_xcconfigs.each { |c| c.build_settings['DEFINES_MODULE'] = 'YES' }
-        pod.user_target_xcconfigs.each { |c| c.build_settings['CLANG_ENABLE_MODULES'] = 'YES' }
       end
     end
   end
@@ -61,7 +58,6 @@ target 'OkulPanel' do
     Dir.glob('Pods/**/react_runtime/**/React-jsitooling.modulemap').each { |p| FileUtils.rm_f(p) }
     Dir.glob('Pods/Headers/**/react_runtime/**/React-jsitooling.modulemap').each { |p| FileUtils.rm_f(p) }
 
-    # 3) KRİTİK: libdav1d/dav1d hedeflerine ASLA dokunma!
-    # Daha önce eklenmiş olabilecek libdav1d özel HEADER_SEARCH_PATHS/OTHER_CFLAGS/EXCLUDED_SOURCE_FILE_NAMES bloklarını tamamen kaldırdık.
+    # 3) libdav1d ile ilgili tüm özel ayarlar kaldırıldı - artık libavif+aom kullanıyoruz
   end
 end
