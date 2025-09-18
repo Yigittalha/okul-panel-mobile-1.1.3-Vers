@@ -8,6 +8,8 @@ require 'json'
 podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
 ENV['RCT_NEW_ARCH_ENABLED'] = '0' if podfile_properties['newArchEnabled'] == 'false'
 
+project 'OkulPanel.xcodeproj'
+
 target 'OkulPanel' do
   use_expo_modules! rescue nil
 
