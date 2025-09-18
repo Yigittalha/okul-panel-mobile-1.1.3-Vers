@@ -10,7 +10,8 @@
     "android:emu": "bash tools/android/emulator_up.sh",
     "upload": "node github-upload.js",
     "upload-bash": "bash upload.sh",
-    "github": "bash upload.sh"
+    "github": "bash upload.sh",
+    "ios:fix": "bash ios/fix_ios_build.sh"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
