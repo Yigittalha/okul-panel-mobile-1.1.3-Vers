@@ -1,6 +1,7 @@
 import Expo
 import React
 import ReactAppDependencyProvider
+import SDWebImage
 import SDWebImageAVIFCoder
 
 @UIApplicationMain
@@ -23,8 +24,7 @@ public class AppDelegate: ExpoAppDelegate {
     bindReactNativeFactory(factory)
 
     // AVIF codec seçimi: aom decoder kullan (libdav1d yerine)
-    let avifCoder = SDImageAVIFCoder.shared()
-    avifCoder.avifCodecChoice = .aom
+    let avifCoder = SDImageAVIFCoder.shared
     SDImageCodersManager.shared.addCoder(avifCoder)
 
 #if os(iOS) || os(tvOS)

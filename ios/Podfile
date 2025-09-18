@@ -19,9 +19,9 @@ target 'OkulPanel' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  # AVIF desteği: libavif + aom decoder (libdav1d yerine)
-  pod 'libavif/core'           # libavif çekirdeği
-  pod 'SDWebImageAVIFCoder'    # AVIF coder
+  # AVIF desteği: libavif (varsayılan libaom decoder)
+  pod 'SDWebImageAVIFCoder'
+  pod 'libavif'                # CocoaPods varsayılanı libaom'dur
 
   pre_install do |installer|
     # Firebase & Google zinciri: static framework + modül
