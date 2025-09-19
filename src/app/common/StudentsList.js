@@ -15,6 +15,7 @@ import {
   Dimensions,
   Modal,
   KeyboardAvoidingView,
+  Clipboard,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
@@ -75,6 +76,15 @@ const StudentItem = ({ student, theme, schoolCode }) => {
     }
   };
 
+  const copyToClipboard = async (text, label) => {
+    try {
+      await Clipboard.setString(text);
+      Alert.alert("Kopyalandı", `${label} panoya kopyalandı.`);
+    } catch (error) {
+      Alert.alert("Hata", "Kopyalama işlemi başarısız oldu.");
+    }
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -129,14 +139,18 @@ const StudentItem = ({ student, theme, schoolCode }) => {
       {expanded && (
         <View style={[styles.expandedSection, { borderTopColor: theme.border || '#E5E7EB' }]}>
           <View style={styles.detailsContainer}>
-            <View style={[styles.infoItem, { backgroundColor: theme.surface || '#F8FAFC' }]}>
+            <TouchableOpacity 
+              style={[styles.infoItem, { backgroundColor: theme.surface || '#F8FAFC' }]}
+              onPress={() => copyToClipboard(student.TCKimlikNo, 'TC Kimlik No')}
+              activeOpacity={0.7}
+            >
               <Text style={[styles.infoTitle, { color: theme.textSecondary || '#64748B' }]}>
                 TC Kimlik No
               </Text>
               <Text style={[styles.infoText, { color: theme.text || '#0F172A' }]}>
                 {student.TCKimlikNo}
               </Text>
-            </View>
+            </TouchableOpacity>
             <View style={styles.infoRow}>
               <Text
                 style={[

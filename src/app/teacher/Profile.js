@@ -332,15 +332,26 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   menuButton: {
-    padding: 10,
+    position: 'absolute',
+    left: 10,       // ← Eski konuma geri döndü
+    top: 35,        // ← Eski konuma geri döndü
+    zIndex: 10,
+    width: 80,      // ← Diğer sayfalardaki gibi büyük
+    height: 80,     // ← Diğer sayfalardaki gibi büyük
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent', // ← Daire yok, sadece ikon
+    borderRadius: 0, // ← Yuvarlaklık yok
   },
   menuIcon: {
-    fontSize: 24,
+    fontSize: 32,  // ← Diğer sayfalardaki gibi büyük ikon
     fontWeight: "bold",
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "bold",
+    textAlign: 'center',    // ← Yazıyı ortala
+    flex: 1,                // ← Kalan alanı kapla
   },
   placeholder: {
     width: 44, // Menu button ile aynı genişlik

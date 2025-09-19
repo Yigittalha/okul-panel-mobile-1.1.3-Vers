@@ -430,20 +430,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 45 : 35,
-    paddingBottom: 20,
+    paddingTop: Platform.OS === 'ios' ? 50 : 40, // ← Biraz daha fazla padding
+    paddingBottom: 16, // ← Biraz daha az padding
     borderBottomWidth: 1,
   },
   menuButton: {
-    padding: 10,
+    position: 'absolute',
+    left: 10,       // ← Sol konumda
+    top: 35,        // ← Yukarıda
+    zIndex: 10,
+    width: 80,      // ← Büyük boyut
+    height: 80,     // ← Büyük boyut
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent', // ← Daire yok
+    borderRadius: 0, // ← Yuvarlaklık yok
   },
   menuIcon: {
-    fontSize: 24,
+    fontSize: 32,  // ← Büyük ikon
     fontWeight: "bold",
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "bold",
+    textAlign: 'center',    // ← Yazıyı ortala
+    flex: 1,                // ← Kalan alanı kapla
   },
   content: {
     flex: 1,

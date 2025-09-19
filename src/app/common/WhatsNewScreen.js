@@ -39,7 +39,7 @@ const WhatsNewScreen = ({ visible, onDismiss }) => {
   const cardAnimations = useRef([]).current;
 
   // Uygulama versiyonu - her güncellemede değiştirilecek
-  const CURRENT_APP_VERSION = "2.3.0";
+  const CURRENT_APP_VERSION = "1.0.0";
 
   // Rol bazlı özellikler
   const getFeaturesByRole = () => {

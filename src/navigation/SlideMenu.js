@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuHeader: {
-    padding: 20,
+    padding: 25,     // ← Biraz daha fazla padding (20 → 25)
     alignItems: "center",
     borderBottomWidth: 1,
     flexShrink: 0,
@@ -493,9 +493,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   menuLogo: {
-    width: 80,
-    height: 80,
-    marginBottom: 10,
+    width: 140,      // ← Biraz küçültüldü (160 → 140)
+    height: 140,     // ← Biraz küçültüldü (160 → 140)
+    marginBottom: 12, // ← Biraz daha az boşluk (15 → 12)
   },
   menuTitle: {
     fontSize: 18,

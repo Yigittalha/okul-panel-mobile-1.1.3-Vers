@@ -227,34 +227,34 @@ const styles = StyleSheet.create({
   chip: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, marginRight: 8 },
   chipText: { fontSize: 12, fontWeight: "600" },
   
-  // Gün kartı stilleri
+  // Gün kartı stilleri - Küçültüldü
   dayCard: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingVertical: 12,  // ← Küçültüldü (16 → 12)
+    paddingHorizontal: 12, // ← Küçültüldü (16 → 12)
+    borderRadius: 10,     // ← Küçültüldü (12 → 10)
     borderWidth: 1,
-    marginVertical: 6,
+    marginVertical: 4,    // ← Küçültüldü (6 → 4)
   },
   dayIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: 40,            // ← Küçültüldü (48 → 40)
+    height: 40,           // ← Küçültüldü (48 → 40)
+    borderRadius: 10,     // ← Küçültüldü (12 → 10)
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 16,
+    marginRight: 12,      // ← Küçültüldü (16 → 12)
   },
   dayContent: {
     flex: 1,
   },
   dayTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 4,
+    fontSize: 16,         // ← Küçültüldü (18 → 16)
+    fontWeight: "600",    // ← Hafifletildi (700 → 600)
+    marginBottom: 2,      // ← Küçültüldü (4 → 2)
   },
   dayCount: {
-    fontSize: 14,
+    fontSize: 13,         // ← Küçültüldü (14 → 13)
     fontWeight: "500",
   },
   

@@ -12,11 +12,11 @@ import {
   StatusBar,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../state/theme";
 import { SessionContext } from "../../state/session";
 // useSlideMenu kaldırıldı - özellik sayfalarında slider menü yok
 import api, { saveStudentGrade } from "../../lib/api";
-import FeaturePageHeader from "../../components/FeaturePageHeader";
 
 const ExamGrading = () => {
   const navigation = useNavigation();
@@ -118,11 +118,26 @@ const ExamGrading = () => {
           backgroundColor={isDark ? "#0D1B2A" : "#f8f9fa"} 
         />
         
-        {/* Header */}
-        <FeaturePageHeader
-          title="Not Verme"
-          onBackPress={() => navigation.goBack()}
-        />
+        {/* Header - Özel padding ile */}
+        <View style={styles.customHeader}>
+          <View style={styles.headerContent}>
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name="arrow-back" 
+                size={24} 
+                color="#1E293B" 
+              />
+            </TouchableOpacity>
+            
+            <Text style={styles.headerTitle}>
+              Not Verme
+            </Text>
+          </View>
+        </View>
         
         <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
           <ActivityIndicator size="large" color="#FFD60A" />
@@ -141,11 +156,26 @@ const ExamGrading = () => {
         backgroundColor={isDark ? "#0D1B2A" : "#f8f9fa"} 
       />
       
-      {/* Header */}
-      <FeaturePageHeader
-        title="Not Verme"
-        onBackPress={() => navigation.goBack()}
-      />
+      {/* Header - Özel padding ile */}
+      <View style={styles.customHeader}>
+        <View style={styles.headerContent}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons 
+              name="arrow-back" 
+              size={24} 
+              color="#1E293B" 
+            />
+          </TouchableOpacity>
+          
+          <Text style={styles.headerTitle}>
+            Not Verme
+          </Text>
+        </View>
+      </View>
 
       {/* Exam Info Card */}
       <View style={[styles.examInfoCard, { 
@@ -244,6 +274,34 @@ const ExamGrading = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  customHeader: {
+    paddingTop: 8,   // ← Daha az boşluk
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: -8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    flex: 1,
+    color: '#1E293B',
+    marginLeft: 12,
   },
   loadingContainer: {
     flex: 1,

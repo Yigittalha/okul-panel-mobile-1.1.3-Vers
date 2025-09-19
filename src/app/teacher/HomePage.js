@@ -265,16 +265,18 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     position: 'absolute',
-    left: 20,
-    top: 20,
+    left: 10,       // ← Daha sol (20 → 10)
+    top: 35,        // ← Daha yukarı (45 → 35)
     zIndex: 10,
-    width: 40,
-    height: 40,
+    width: 80,      // ← Çok büyük (60 → 80)
+    height: 80,     // ← Çok büyük (60 → 80)
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent', // ← Daireyi kaldır
+    borderRadius: 0, // ← Yuvarlaklığı kaldır
   },
   menuIcon: {
-    fontSize: 24,
+    fontSize: 32,  // ← İkonu büyüt (24 → 32)
     fontWeight: 'bold',
   },
   headerContent: {

@@ -34,7 +34,7 @@ export default function RootNavigator() {
   const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   // Uygulama versiyonu - her güncellemede değiştirilecek
-  const CURRENT_APP_VERSION = "2.3.0";
+  const CURRENT_APP_VERSION = "1.0.0";
 
   // Create custom dark theme with darkClassic colors
   const customDarkTheme = {
