@@ -14,6 +14,8 @@ import {
   setRefreshToken,
 } from "../lib/storage";
 import { setSessionClearCallback } from "../lib/api";
+import messaging from '@react-native-firebase/messaging';
+import axios from 'axios';
 
 export const SessionContext = createContext();
 
@@ -35,12 +37,57 @@ export const SessionProvider = ({ children }) => {
   }, []);
 
   const clearSession = async () => {
+    console.log('🚀 clearSession fonksiyonu çağrıldı!');
+    
     // SlideMenu state'ini temizle (eğer callback varsa)
     if (slideMenuResetCallbackRef.current) {
       slideMenuResetCallbackRef.current();
     }
     
-    // FCM logout işlemi - user bilgisi varsa
+    // FCM Token silme işlemi
+    try {
+      console.log('🔔 FCM token alınıyor...');
+      
+      // FCM token alma işlemini debug et
+      console.log('🔍 messaging() kontrol ediliyor...');
+      console.log('🔍 messaging().getToken() çağrılıyor...');
+      
+      const fcmToken = await messaging().getToken();
+      console.log('🔍 FCM Token alındı:', fcmToken ? 'Token var' : 'Token yok');
+      
+      if (fcmToken) {
+        console.log('📤 FCM token API\'ye gönderiliyor...');
+        console.log('🔍 FCM Token:', fcmToken.substring(0, 20) + '...');
+        
+        // Bearer token al
+        const bearerToken = await getToken();
+        console.log('🔍 Bearer Token:', bearerToken ? 'Token var' : 'Token yok');
+        
+        // API'ye POST isteği gönder
+        console.log('🌐 API isteği gönderiliyor...');
+        console.log('🔍 API URL: https://ahuiho.okulpanel.com.tr/api/user/token/delete');
+        
+        const response = await axios.post('https://ahuiho.okulpanel.com.tr/api/user/token/delete', {
+          token: fcmToken
+        }, {
+          headers: {
+            'Authorization': `Bearer ${bearerToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('✅ FCM token başarıyla silindi:', response.data);
+      } else {
+        console.log('⚠️ FCM token bulunamadı');
+      }
+    } catch (error) {
+      console.error('❌ FCM token silme hatası:', error);
+      console.error('❌ Hata detayı:', error.message);
+      console.error('❌ Hata stack:', error.stack);
+      // FCM token silme hatası olsa bile çıkış yapmaya devam et
+    }
+    
+    // Eski FCM logout işlemi - user bilgisi varsa
     if (session.user && global.handleFCMLogout) {
       let userId = null;
       if (session.user.OgretmenID) {

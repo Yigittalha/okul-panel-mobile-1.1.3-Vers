@@ -26,7 +26,7 @@ const StudentExamsList = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [studentInfo, setStudentInfo] = useState(null);
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
   // API'den sınavları getir
@@ -169,24 +169,23 @@ const StudentExamsList = () => {
   // Yüklenme durumu
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <FeaturePageHeader
+          title="Sınavlarım"
+          onBackPress={() => navigation.goBack()}
+        />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#333" />
-          <Text style={[styles.loadingText, { color: "#333" }]}>
+          <ActivityIndicator size="large" color={theme.accent} />
+          <Text style={[styles.loadingText, { color: theme.text }]}>
             Sınavlar yükleniyor...
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <StatusBar
-        backgroundColor={theme.background}
-        barStyle="dark-content"
-      />
-      
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <FeaturePageHeader
         title="Sınavlarım"
@@ -286,7 +285,7 @@ const StudentExamsList = () => {
         navigation={navigation} 
         currentRoute="StudentExamsList" 
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

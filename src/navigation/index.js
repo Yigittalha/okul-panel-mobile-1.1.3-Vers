@@ -60,6 +60,20 @@ export default function RootNavigator() {
         return;
       }
 
+      if (!role) {
+        console.log('❌ Role not loaded yet, waiting...');
+        // Role yüklenene kadar bekle
+        const checkRole = () => {
+          if (role) {
+            handleNotificationNavigation(remoteMessage);
+          } else {
+            setTimeout(checkRole, 500);
+          }
+        };
+        setTimeout(checkRole, 500);
+        return;
+      }
+
       try {
         // Notification data'sını detaylı logla
         console.log('🔍 Full notification data:', JSON.stringify(remoteMessage, null, 2));
@@ -99,14 +113,20 @@ export default function RootNavigator() {
           // Kısa bir delay ile navigation yap (navigation hazır olması için)
           setTimeout(() => {
             if (navigationRef.current) {
+              // Role'e göre doğru screen'leri kullan
+              const homeScreen = role === 'parent' ? 'StudentHomePage' : 'HomePage';
+              const inboxScreen = role === 'parent' ? 'StudentMessageInbox' : 'MessageInbox';
+              
+              console.log(`🔍 Role: ${role}, navigating to ${homeScreen} then ${inboxScreen}`);
+              
               // Önce ana sayfaya git, sonra Gelen Kutusu'na
-              navigationRef.current.navigate('HomePage');
+              navigationRef.current.navigate(homeScreen);
               
               // 500ms sonra Gelen Kutusu'na git
               setTimeout(() => {
                 if (navigationRef.current) {
-                  navigationRef.current.navigate('MessageInbox');
-                  console.log('✅ Successfully navigated to MessageInbox');
+                  navigationRef.current.navigate(inboxScreen);
+                  console.log(`✅ Successfully navigated to ${inboxScreen}`);
                 }
               }, 500);
             }

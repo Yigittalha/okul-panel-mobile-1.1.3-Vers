@@ -43,14 +43,15 @@ const SchoolSelect = () => {
           }));
           setDynamicSchools(formattedSchools);
         } else {
-          // API başarısızsa static listeyi kullan
-          console.log("📋 Using fallback static schools list");
-          setDynamicSchools(schools);
+          // API başarısızsa boş liste kullan
+          console.log("📋 API'den okul listesi alınamadı, boş liste gösteriliyor");
+          setDynamicSchools([]);
         }
       } catch (error) {
         console.error("❌ Error loading schools:", error);
-        // Hata durumunda static listeyi kullan
-        setDynamicSchools(schools);
+        // Hata durumunda boş liste kullan
+        console.log("📋 Hata durumunda boş liste gösteriliyor");
+        setDynamicSchools([]);
       } finally {
         setLoading(false);
       }
@@ -126,6 +127,15 @@ const SchoolSelect = () => {
                     <ActivityIndicator size="small" color={theme.accent} />
                     <Text style={[styles.loadingText, { color: theme.inputText }]}>
                       Okullar yükleniyor...
+                    </Text>
+                  </View>
+                ) : dynamicSchools.length === 0 ? (
+                  <View style={styles.emptyContainer}>
+                    <Text style={[styles.emptyText, { color: theme.inputText }]}>
+                      📋 Okul listesi bulunamadı
+                    </Text>
+                    <Text style={[styles.emptySubText, { color: theme.textSecondary }]}>
+                      Lütfen internet bağlantınızı kontrol edin
                     </Text>
                   </View>
                 ) : (
@@ -297,6 +307,21 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 8,
     fontSize: 14,
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptySubText: {
+    fontSize: 12,
+    textAlign: "center",
+    opacity: 0.7,
   },
 });
 

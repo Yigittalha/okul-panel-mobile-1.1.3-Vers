@@ -232,41 +232,19 @@ const HomeworkGivenDetail = () => {
             ℹ️ Ek Bilgiler
           </Text>
 
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: "#9CA3AF" }]}>
-              Puan:
-            </Text>
-            <Text style={[styles.infoValue, { color: theme.text }]}>
-              {homework.puan || "Belirtilmemiş"}
-            </Text>
-          </View>
 
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: "#9CA3AF" }]}>
-              Sınıf:
+              {homework.KayitTuru === 1 ? "Öğrenci No:" : "Sınıf:"}
             </Text>
             <Text style={[styles.infoValue, { color: theme.text }]}>
-              {homework.Sinif || "Belirtilmemiş"}
+              {homework.KayitTuru === 1 
+                ? (homework.OgrenciNumara || "Belirtilmemiş")
+                : (homework.Sinif || "Belirtilmemiş")
+              }
             </Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: "#9CA3AF" }]}>
-              Öğrenci ID:
-            </Text>
-            <Text style={[styles.infoValue, { color: theme.text }]}>
-              {homework.OgrenciID || "Tüm sınıf"}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: "#9CA3AF" }]}>
-              Öğretmen ID:
-            </Text>
-            <Text style={[styles.infoValue, { color: theme.text }]}>
-              {homework.OgretmenID || "Belirtilmemiş"}
-            </Text>
-          </View>
 
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: "#9CA3AF" }]}>

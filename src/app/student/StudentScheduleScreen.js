@@ -242,19 +242,19 @@ export default function StudentScheduleScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <View style={[styles.safeArea, { backgroundColor: theme.background }]}>
         {renderNavbar()}
         <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
           <ActivityIndicator size="large" color={theme.accent} />
           <Text style={[styles.loadingText, { color: theme.text }]}>Ders programı yükleniyor...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <View style={[styles.safeArea, { backgroundColor: theme.background }]}>
         {renderNavbar()}
         <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
           <Text style={[styles.errorText, { color: theme.danger }]}>{error}</Text>
@@ -262,23 +262,23 @@ export default function StudentScheduleScreen() {
             <Text style={[styles.retryText, { color: theme.accent }]}>Tekrar Dene</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (schedule.length === 0) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <View style={[styles.safeArea, { backgroundColor: theme.background }]}>
         {renderNavbar()}
         <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
           <Text style={[styles.emptyText, { color: theme.text }]}>Bu sınıf için program bulunamadı</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+    <View style={[styles.safeArea, { backgroundColor: theme.background }]}>
       {renderNavbar()}
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <FlatList
@@ -304,7 +304,7 @@ export default function StudentScheduleScreen() {
         navigation={navigation} 
         currentRoute="StudentScheduleScreen" 
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

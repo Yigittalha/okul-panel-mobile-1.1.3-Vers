@@ -419,7 +419,7 @@ const ExamAdd = () => {
             ) : (
               <FlatList
                 data={classList}
-                keyExtractor={(item) => item.SinifKodu}
+                keyExtractor={(item) => item.SinifAdi}
                 style={{ maxHeight: MAX_DROPDOWN_HEIGHT }}
                 contentContainerStyle={{ paddingVertical: 8 }}
                 showsVerticalScrollIndicator={false}

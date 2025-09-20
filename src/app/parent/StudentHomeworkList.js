@@ -204,7 +204,7 @@ const StudentHomeworkList = () => {
   const getStatusText = (status, puan) => {
     // Eğer puan verilmişse (null değil ve boş değil), ödev tamamlanmış demektir
     if (puan !== null && puan !== undefined && puan !== "") {
-      return "Tamamlandı";
+      return "Puan verildi";
     }
     
     // Puan verilmemişse, orijinal durum koduna göre belirle
@@ -216,7 +216,7 @@ const StudentHomeworkList = () => {
       case 2:
         return "Gecikti";
       default:
-        return "Bilinmiyor";
+        return "Puanlanmadı";
     }
   };
 

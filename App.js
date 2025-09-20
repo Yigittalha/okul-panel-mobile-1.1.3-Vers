@@ -354,10 +354,28 @@ const AppContent = () => {
       .then(remoteMessage => {
         if (remoteMessage) {
           console.log('Uygulama bildirimle açıldı:', remoteMessage);
-          // Global navigation handler'a bildir
-          if (global.handleNotificationNavigation) {
-            global.handleNotificationNavigation(remoteMessage);
-          }
+          console.log('📱 Platform:', Platform.OS);
+          
+          // Android için daha uzun delay
+          const delay = Platform.OS === 'android' ? 2000 : 1000;
+          console.log(`⏱️ Using ${delay}ms delay for ${Platform.OS}`);
+          
+          // Global navigation handler'a bildir - platform'a göre delay ile
+          setTimeout(() => {
+            if (global.handleNotificationNavigation) {
+              global.handleNotificationNavigation(remoteMessage);
+            } else {
+              console.log('❌ Navigation handler henüz hazır değil, 3 saniye sonra tekrar denenecek');
+              // 3 saniye sonra tekrar dene (Android için daha uzun)
+              setTimeout(() => {
+                if (global.handleNotificationNavigation) {
+                  global.handleNotificationNavigation(remoteMessage);
+                } else {
+                  console.log('❌ Navigation handler hala hazır değil');
+                }
+              }, 3000);
+            }
+          }, delay);
         }
       });
 

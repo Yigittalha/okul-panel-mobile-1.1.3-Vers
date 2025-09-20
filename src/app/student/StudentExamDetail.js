@@ -17,7 +17,7 @@ const StudentExamDetail = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { exam } = route.params;
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
   // Tarih formatla
@@ -76,12 +76,7 @@ const StudentExamDetail = () => {
   const timeUntilExam = getTimeUntilExam(exam.Tarih);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <StatusBar
-        backgroundColor={theme.background}
-        barStyle="dark-content"
-      />
-      
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <FeaturePageHeader
         title="Sınav Detayı"
@@ -198,7 +193,7 @@ const StudentExamDetail = () => {
         navigation={navigation} 
         currentRoute="StudentExamDetail" 
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

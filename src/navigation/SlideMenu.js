@@ -75,14 +75,19 @@ export default function SlideMenu() {
   const [forceRefreshKey, setForceRefreshKey] = useState(0);
 
   const handleLogout = () => {
+    console.log('🚀 handleLogout fonksiyonu çağrıldı!');
     Alert.alert("Çıkış Yap", "Oturumu kapatmak istediğinizden emin misiniz?", [
       { text: "İptal", style: "cancel" },
       {
         text: "Çıkış Yap",
         style: "destructive",
         onPress: async () => {
+          console.log('🚀 Alert\'te "Çıkış Yap" seçildi!');
+          console.log('🚀 closeMenu() çağrılıyor...');
           closeMenu();
+          console.log('🚀 clearSession() çağrılıyor...');
           await clearSession(); // clearSession artık otomatik olarak SlideMenu state'ini temizleyecek
+          console.log('🚀 clearSession() tamamlandı!');
         },
       },
     ]);
@@ -404,7 +409,10 @@ export default function SlideMenu() {
                   borderColor: theme.border,
                 },
               ]}
-              onPress={handleLogout}
+              onPress={() => {
+                console.log('🚀 Çıkış Yap butonuna basıldı!');
+                handleLogout();
+              }}
               activeOpacity={0.7}
             >
               <View style={[styles.logoutIcon, { backgroundColor: "#ff6b6b" }]}>
