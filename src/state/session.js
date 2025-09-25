@@ -63,11 +63,20 @@ export const SessionProvider = ({ children }) => {
         const bearerToken = await getToken();
         console.log('🔍 Bearer Token:', bearerToken ? 'Token var' : 'Token yok');
         
+        // Dinamik API URL oluştur
+        const schoolCode = await getSchoolCode();
+        let apiUrl;
+        if (schoolCode && schoolCode !== 'default') {
+          apiUrl = `https://${schoolCode}.okulpanel.com.tr/api/user/token/delete`;
+        } else {
+          apiUrl = 'https://ahuiho.okulpanel.com.tr/api/user/token/delete';
+        }
+        
         // API'ye POST isteği gönder
         console.log('🌐 API isteği gönderiliyor...');
-        console.log('🔍 API URL: https://ahuiho.okulpanel.com.tr/api/user/token/delete');
+        console.log('🔍 API URL:', apiUrl);
         
-        const response = await axios.post('https://ahuiho.okulpanel.com.tr/api/user/token/delete', {
+        const response = await axios.post(apiUrl, {
           token: fcmToken
         }, {
           headers: {

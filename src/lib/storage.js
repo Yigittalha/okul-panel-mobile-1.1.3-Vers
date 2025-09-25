@@ -7,7 +7,6 @@ const SCHOOL_PHOTO_KEY = "schoolPhoto";
 const ROLE_KEY = "role";
 const USER_KEY = "user";
 const THEME_KEY = "theme";
-const NEWS_CARD_DISMISSED_KEY = "newsCardDismissed";
 const APP_VERSION_KEY = "appVersion";
 
 async function save(key, value) {
@@ -83,14 +82,6 @@ export async function getTheme() {
   return read(THEME_KEY);
 }
 
-// What's New fonksiyonları
-export async function setNewsCardDismissed(version) {
-  return save(NEWS_CARD_DISMISSED_KEY, version);
-}
-
-export async function getNewsCardDismissed() {
-  return read(NEWS_CARD_DISMISSED_KEY);
-}
 
 export async function setAppVersion(version) {
   return save(APP_VERSION_KEY, version);
@@ -110,7 +101,6 @@ export async function clearAllStorage() {
     SecureStore.deleteItemAsync(ROLE_KEY),
     SecureStore.deleteItemAsync(USER_KEY),
     SecureStore.deleteItemAsync(THEME_KEY),
-    SecureStore.deleteItemAsync(NEWS_CARD_DISMISSED_KEY),
     SecureStore.deleteItemAsync(APP_VERSION_KEY),
   ]);
   console.log("🧹 Tüm storage temizlendi");

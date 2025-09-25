@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { useTheme } from "../../state/theme";
 import { SessionContext } from "../../state/session";
@@ -71,6 +72,21 @@ const SchoolSelect = () => {
     if (!selected) return;
     updateSchoolCode(selected, selectedPhoto);
     navigation.navigate("Login");
+  };
+
+  const handleDemoRequest = async () => {
+    try {
+      const url = 'https://okulpanel.com/pricing';
+      const supported = await Linking.canOpenURL(url);
+      
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log('URL açılamıyor:', url);
+      }
+    } catch (error) {
+      console.error('Demo link açılırken hata:', error);
+    }
   };
 
   return (
@@ -169,6 +185,25 @@ const SchoolSelect = () => {
         >
           <Text style={[styles.buttonText, { color: theme.primary }]}>
             {selected ? "➡️ Devam Et" : "📋 Okul Seçin"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Demo İsteyin Butonu */}
+        <TouchableOpacity
+          style={[
+            styles.demoButton,
+            { 
+              backgroundColor: 'transparent',
+              borderColor: theme.accent,
+              borderWidth: 2,
+              marginTop: 15,
+            },
+          ]}
+          onPress={handleDemoRequest}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.demoButtonText, { color: theme.accent }]}>
+            🎯 Demo İsteyin
           </Text>
         </TouchableOpacity>
       </View>
@@ -298,6 +333,21 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: "bold",
+  },
+  demoButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  demoButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
   loadingContainer: {
     padding: 20,

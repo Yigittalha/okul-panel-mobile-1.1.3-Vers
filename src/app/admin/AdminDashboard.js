@@ -15,6 +15,7 @@ import { SessionContext } from "../../state/session";
 import { useTheme } from "../../state/theme";
 import { useSlideMenu } from "../../navigation/SlideMenuContext";
 import RefreshableScrollView from "../../components/RefreshableScrollView";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Removed darkBlue and yellow imports - using theme tokens now
 
@@ -23,6 +24,7 @@ const AdminDashboard = () => {
   const { schoolCode, clearSession } = useContext(SessionContext);
   const { theme, isDark, toggleTheme } = useTheme();
   const { openMenu } = useSlideMenu();
+  const insets = useSafeAreaInsets();
   const [adminData, setAdminData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -158,9 +160,23 @@ const AdminDashboard = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Header kısmını eski haline getir */}
-      <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={styles.menuButton} onPress={openMenu}>
+      {/* Header kısmını responsive hale getir */}
+      <View style={[
+        styles.header, 
+        { 
+          borderBottomColor: theme.border,
+          paddingTop: Math.max(insets.top + 10, 35), // Safe area + minimum padding
+        }
+      ]}>
+        <TouchableOpacity 
+          style={[
+            styles.menuButton, 
+            { 
+              top: Math.max(insets.top + 15, 35) // Safe area + minimum padding
+            }
+          ]} 
+          onPress={openMenu}
+        >
           <Text style={[styles.menuIcon, { color: theme.text }]}>☰</Text>
         </TouchableOpacity>
 
@@ -270,33 +286,6 @@ const AdminDashboard = () => {
           </View>
         </View>
 
-        <View style={styles.statsContainer}>
-          <View
-            style={[
-              styles.statCard,
-              { backgroundColor: theme.card, borderColor: theme.border },
-            ]}
-          >
-            <Text style={styles.statIcon}>👥</Text>
-            <Text style={[styles.statTitle, { color: theme.text }]}>
-              Kullanıcılar
-            </Text>
-            <Text style={[styles.statValue, { color: theme.text }]}>-</Text>
-          </View>
-
-          <View
-            style={[
-              styles.statCard,
-              { backgroundColor: theme.card, borderColor: theme.border },
-            ]}
-          >
-            <Text style={styles.statIcon}>🏫</Text>
-            <Text style={[styles.statTitle, { color: theme.text }]}>
-              Okullar
-            </Text>
-            <Text style={[styles.statValue, { color: theme.text }]}>-</Text>
-          </View>
-        </View>
       </RefreshableScrollView>
 
       {/* SlideMenu bileşeni kaldırıldı - döngüsel bağımlılık çözümü */}
@@ -330,27 +319,31 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
     position: 'relative',
+    minHeight: 60, // Minimum header yüksekliği
   },
   menuButton: {
     position: 'absolute',
-    left: 10,
-    top: 35,
+    left: 15,
     zIndex: 10,
-    width: 80,
-    height: 80,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
-    borderRadius: 0,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   menuIcon: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
   },
   headerTitle: {
@@ -433,31 +426,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     flex: 1,
     textAlign: "right",
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  statCard: {
-    borderWidth: 1,
-    borderRadius: 15,
-    padding: 20,
-    alignItems: "center",
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  statIcon: {
-    fontSize: 30,
-    marginBottom: 10,
-  },
-  statTitle: {
-    fontSize: 14,
-    opacity: 0.8,
-    marginBottom: 5,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: "bold",
   },
   errorText: {
     fontSize: 16,

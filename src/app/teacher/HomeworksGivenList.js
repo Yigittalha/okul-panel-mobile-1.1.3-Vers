@@ -173,13 +173,6 @@ const HomeworksGivenList = () => {
     }
   };
 
-  const getScopeColor = (homework) => {
-    if (homework.OgrenciID === null) {
-      return "#B45309"; // Daha koyu turuncu - tüm sınıf (Android'de daha görünür)
-    } else {
-      return "#1D4ED8"; // Daha koyu mavi - öğrenciye özel (Android'de daha görünür)
-    }
-  };
 
   const navigateToDetail = (homework) => {
     navigation.navigate("HomeworkGivenDetail", {
@@ -209,7 +202,7 @@ const HomeworksGivenList = () => {
             </Text>
           </View>
           <View style={styles.scopeContainer}>
-            <Text style={[styles.scopeText, { color: getScopeColor(item) }]}>
+            <Text style={[styles.scopeText, { color: "#9CA3AF" }]}>
               {getScopeText(item)}
             </Text>
           </View>

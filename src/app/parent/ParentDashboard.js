@@ -15,6 +15,7 @@ import { SessionContext } from "../../state/session";
 import { useTheme } from "../../state/theme";
 import { useSlideMenu } from "../../navigation/SlideMenuContext";
 import RefreshableScrollView from "../../components/RefreshableScrollView";
+import StudentBottomMenu from "../../components/StudentBottomMenu";
 
 const ParentDashboard = () => {
   const navigation = useNavigation();
@@ -398,6 +399,12 @@ const ParentDashboard = () => {
           </Text>
         </TouchableOpacity>
       </RefreshableScrollView>
+      
+      {/* Alt Menü */}
+      <StudentBottomMenu 
+        navigation={navigation} 
+        currentRoute="ParentDashboard" 
+      />
     </View>
   );
 };

@@ -176,6 +176,24 @@ const StudentHomeworkDetail = () => {
     return "#22C55E15";                              // Yeşil (70+)
   };
 
+  // Puan outline rengini belirle
+  const getPointsBorderColor = (points) => {
+    if (!points || points === null || points === "") return "rgba(107, 114, 128, 0.3)";
+    
+    const numericPoints = parseInt(points);
+    if (isNaN(numericPoints)) return "rgba(107, 114, 128, 0.3)";
+    
+    if (numericPoints === 100) return "rgba(34, 197, 94, 0.4)";      // Yeşil - Yaptı
+    if (numericPoints === 50) return "rgba(245, 158, 11, 0.4)";      // Sarı - Yarım Yaptı
+    if (numericPoints === 0) return "rgba(239, 68, 68, 0.4)";        // Kırmızı - Yapmadı
+    
+    // Diğer puan değerleri için
+    if (numericPoints < 30) return "rgba(239, 68, 68, 0.4)";         // Kırmızı
+    if (numericPoints < 50) return "rgba(245, 158, 11, 0.4)";        // Sarı/Turuncu
+    if (numericPoints < 70) return "rgba(255, 165, 0, 0.4)";         // Turuncu
+    return "rgba(34, 197, 94, 0.4)";                                 // Yeşil (70+)
+  };
+
   // Puan değerini yazılı karşılığına çevir
   const getPointsText = (points) => {
     if (!points || points === null || points === "") return "Puan verilmedi";
@@ -353,11 +371,16 @@ const StudentHomeworkDetail = () => {
 
           {/* Puan Bilgisi - Vurgulanmış */}
           {homework.puan && homework.puan !== null && homework.puan !== "" ? (
-            <View style={[styles.pointsInfoContainer, { backgroundColor: getPointsBackgroundColor(homework.puan) }]}>
+            <View style={[styles.pointsInfoContainer, { backgroundColor: getPointsBackgroundColor(homework.puan), borderColor: getPointsBorderColor(homework.puan) }]}>
               <View style={styles.pointsInfoHeader}>
-                <Text style={[styles.pointsInfoLabel, { color: getPointsColor(homework.puan) }]}>
-                  🏆 Puan
-                </Text>
+                <View style={styles.pointsInfoLeft}>
+                  <Text style={[styles.pointsInfoIcon, { color: getPointsColor(homework.puan) }]}>
+                    {homework.puan === "100" ? "✅" : homework.puan === "50" ? "⚠️" : homework.puan === "0" ? "❌" : "🏆"}
+                  </Text>
+                  <Text style={[styles.pointsInfoLabel, { color: getPointsColor(homework.puan) }]}>
+                    Puan Durumu
+                  </Text>
+                </View>
                 <View style={[styles.pointsBadge, { backgroundColor: getPointsColor(homework.puan) }]}>
                   <Text style={[styles.pointsBadgeText, { color: "#fff" }]}>
                     {getPointsText(homework.puan)}
@@ -366,11 +389,9 @@ const StudentHomeworkDetail = () => {
               </View>
             </View>
           ) : (
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.muted }]}>
-                Puan:
-              </Text>
-              <Text style={[styles.infoValue, { color: "#9CA3AF" }]}>
+            <View style={[styles.noPointsContainer, { backgroundColor: "#F3F4F6", borderColor: "#E5E7EB" }]}>
+              <Text style={[styles.noPointsIcon, { color: "#9CA3AF" }]}>⏳</Text>
+              <Text style={[styles.noPointsText, { color: "#9CA3AF" }]}>
                 Henüz puan verilmedi
               </Text>
             </View>
@@ -608,31 +629,68 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   pointsInfoContainer: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 16,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "rgba(34, 197, 94, 0.2)",
+    borderWidth: 2,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   pointsInfoHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
+  pointsInfoLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  pointsInfoIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
   pointsInfoLabel: {
+    fontSize: 18,
+    fontWeight: "700",
+    flex: 1,
+  },
+  pointsBadge: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    minWidth: 80,
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  pointsBadgeText: {
     fontSize: 16,
     fontWeight: "bold",
   },
-  pointsBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    minWidth: 60,
+  noPointsContainer: {
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderStyle: "dashed",
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
   },
-  pointsBadgeText: {
-    fontSize: 18,
-    fontWeight: "bold",
+  noPointsIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  noPointsText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

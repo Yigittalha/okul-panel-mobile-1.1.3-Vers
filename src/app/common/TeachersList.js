@@ -319,22 +319,21 @@ const TeachersList = () => {
         }
       ]}>
         <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => openMenu("TeachersList")}
+          style={[
+            styles.backButton,
+            { 
+              top: Math.max(insets.top + 15, 35) // Safe area + minimum padding
+            }
+          ]}
+          onPress={() => navigation.goBack()}
         >
-          <Text style={[styles.menuIcon, { color: theme.text }]}>☰</Text>
+          <Text style={[styles.backIcon, { color: theme.text }]}>←</Text>
         </TouchableOpacity>
 
         <Text style={[styles.headerTitle, { color: theme.text }]}>
           Öğretmenler
         </Text>
 
-        <TouchableOpacity
-          style={[styles.messageButton, { backgroundColor: theme.accent }]}
-          onPress={() => navigation.navigate("MessageSend")}
-        >
-          <Text style={[styles.messageButtonText, { color: theme.primary }]}>💬</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
@@ -439,17 +438,21 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
+    position: 'relative',
   },
-  menuButton: {
+  backButton: {
+    position: 'absolute',
+    left: 15,
     padding: 10,
+    zIndex: 10,
   },
-  menuIcon: {
-    fontSize: 24,
+  backIcon: {
+    fontSize: 28,
     fontWeight: "bold",
   },
   headerTitle: {
@@ -570,16 +573,6 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 8,
-  },
-  messageButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  messageButtonText: {
-    fontSize: 18,
   },
 });
 

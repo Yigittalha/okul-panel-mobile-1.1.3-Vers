@@ -712,7 +712,7 @@ const HomeworkAssignment = () => {
             ) : (
               <FlatList
                 data={classes}
-                keyExtractor={(item) => item.SinifKodu}
+                keyExtractor={(item, index) => item.SinifAdi ? item.SinifAdi : `class-${index}`}
                 style={{ maxHeight: MAX_DROPDOWN_HEIGHT }}
                 contentContainerStyle={{ paddingVertical: 8 }}
                 showsVerticalScrollIndicator={false}

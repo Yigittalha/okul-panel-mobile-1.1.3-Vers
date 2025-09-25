@@ -10,11 +10,9 @@ import SchoolSelect from "../app/auth/SchoolSelect";
 import Login from "../app/auth/Login";
 import AppDrawer from "./AppDrawer";
 import SlideMenu from "./SlideMenu";
-import WhatsNewScreen from "../app/common/WhatsNewScreen";
 import { useTheme } from "../state/theme";
 import { darkClassic } from "../constants/colors";
 import ExamAdd from "../app/teacher/ExamAdd";
-import { getNewsCardDismissed } from "../lib/storage";
 
 const Stack = createNativeStackNavigator();
 
@@ -31,10 +29,6 @@ export default function RootNavigator() {
   const { isAuthenticated, loading, role } = useContext(SessionContext);
   const { isDark, theme } = useTheme();
   const navigationRef = useRef();
-  const [showWhatsNew, setShowWhatsNew] = useState(false);
-
-  // Uygulama versiyonu - her güncellemede değiştirilecek
-  const CURRENT_APP_VERSION = "1.0.0";
 
   // Create custom dark theme with darkClassic colors
   const customDarkTheme = {
@@ -147,48 +141,6 @@ export default function RootNavigator() {
     };
   }, [isAuthenticated]);
 
-  // What's New kontrolü - sadece authenticated ve role yüklendikten sonra
-  useEffect(() => {
-    checkWhatsNewVisibility();
-  }, [isAuthenticated, role]);
-
-  const checkWhatsNewVisibility = async () => {
-    try {
-      console.log('🔍 checkWhatsNewVisibility çalışıyor...');
-      console.log('🔍 isAuthenticated:', isAuthenticated);
-      console.log('🔍 role:', role);
-      
-      // Henüz authenticate olmamışsa veya role yüklenmemişse bekle
-      if (!isAuthenticated || !role) {
-        console.log('⏳ Henüz hazır değil, bekleniyor...');
-        return;
-      }
-
-      // Sadece öğretmen ve öğrenci için kontrol et
-      if (role !== 'teacher' && role !== 'parent') {
-        console.log('❌ Role uygun değil:', role);
-        return;
-      }
-
-      const seenVersion = await getNewsCardDismissed();
-      console.log('🔍 seenVersion:', seenVersion);
-      console.log('🔍 CURRENT_APP_VERSION:', CURRENT_APP_VERSION);
-      
-      // Eğer hiç görülmemişse veya mevcut versiyon farklıysa göster
-      const shouldShow = !seenVersion || seenVersion !== CURRENT_APP_VERSION;
-      console.log('🔍 shouldShow:', shouldShow);
-      
-      if (shouldShow) {
-        console.log('✅ What\'s New gösteriliyor');
-        setShowWhatsNew(true);
-      } else {
-        console.log('❌ What\'s New gösterilmiyor');
-        setShowWhatsNew(false);
-      }
-    } catch (error) {
-      console.log('❌ WhatsNew görünürlük kontrolü hatası:', error);
-    }
-  };
 
   if (loading) return null; // Or a splash screen
 
@@ -201,10 +153,6 @@ export default function RootNavigator() {
         <>
           <AppDrawer />
           <SlideMenu />
-          <WhatsNewScreen 
-            visible={showWhatsNew} 
-            onDismiss={() => setShowWhatsNew(false)} 
-          />
         </>
       ) : (
         <AuthStack />

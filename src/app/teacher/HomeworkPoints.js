@@ -209,18 +209,21 @@ const HomeworkPoints = () => {
                   }
                 ]}
               >
-                <View style={styles.studentInfo}>
-                  <Text style={[styles.studentName, { color: theme.text }]}>
-                    {student.AdSoyad}
-                  </Text>
+                {/* Öğrenci Numarası - Üst */}
+                <View style={styles.studentNumberContainer}>
                   <Text style={[styles.studentNumber, { color: "#9CA3AF" }]}>
                     No: {student.OgrenciNumara}
                   </Text>
-                  <Text style={[styles.studentDate, { color: "#9CA3AF" }]}>
-                    Teslim: {formatDate(student.TeslimTarihi)}
+                </View>
+
+                {/* Öğrenci Adı - Ortada */}
+                <View style={styles.studentNameContainer}>
+                  <Text style={[styles.studentName, { color: theme.text }]}>
+                    {student.AdSoyad}
                   </Text>
                 </View>
 
+                {/* Puan Verme Butonları - Alt */}
                 <View style={styles.pointsSection}>
                   <TouchableOpacity
                     style={[
@@ -409,33 +412,40 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   studentItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     padding: 16,
     marginBottom: 12,
     borderRadius: 8,
     borderWidth: 1,
+    alignItems: "center",
   },
-  studentInfo: {
-    flex: 1,
-    marginRight: 16,
+  studentNumberContainer: {
+    width: "100%",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  studentNameContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 12,
+    minHeight: 40,
+    justifyContent: "center",
   },
   studentName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
-    marginBottom: 4,
+    textAlign: "center",
+    flexWrap: "wrap",
+    numberOfLines: 2,
   },
   studentNumber: {
     fontSize: 14,
-    marginBottom: 2,
-  },
-  studentDate: {
-    fontSize: 12,
+    fontWeight: "500",
   },
   pointsSection: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
   selectButton: {
     borderWidth: 1,
