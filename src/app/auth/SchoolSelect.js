@@ -74,19 +74,9 @@ const SchoolSelect = () => {
     navigation.navigate("Login");
   };
 
-  const handleDemoRequest = async () => {
-    try {
-      const url = 'https://okulpanel.com/pricing';
-      const supported = await Linking.canOpenURL(url);
-      
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        console.log('URL açılamıyor:', url);
-      }
-    } catch (error) {
-      console.error('Demo link açılırken hata:', error);
-    }
+  // İletişim sayfasına yönlendirme
+  const handleContact = () => {
+    navigation.navigate('Contact');
   };
 
   return (
@@ -188,24 +178,32 @@ const SchoolSelect = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Demo İsteyin Butonu */}
-        <TouchableOpacity
-          style={[
-            styles.demoButton,
-            { 
-              backgroundColor: 'transparent',
-              borderColor: theme.accent,
-              borderWidth: 2,
-              marginTop: 15,
-            },
-          ]}
-          onPress={handleDemoRequest}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.demoButtonText, { color: theme.accent }]}>
-            🎯 Demo İsteyin
-          </Text>
-        </TouchableOpacity>
+               {/* İletişim Butonu */}
+               <TouchableOpacity
+                 style={[
+                   styles.contactButton,
+                   { 
+                     backgroundColor: theme.accent,
+                     borderColor: theme.accent,
+                     borderWidth: 0,
+                     marginTop: 20,
+                     shadowColor: theme.accent,
+                     shadowOffset: { width: 0, height: 4 },
+                     shadowOpacity: 0.3,
+                     shadowRadius: 8,
+                   },
+                 ]}
+                 onPress={handleContact}
+                 activeOpacity={0.8}
+               >
+                 <View style={styles.contactButtonContent}>
+                   <Text style={styles.contactIcon}>📞</Text>
+                   <Text style={[styles.contactButtonText, { color: theme.primary }]}>
+                     İletişim
+                   </Text>
+                   <Text style={styles.contactArrow}>→</Text>
+                 </View>
+               </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -334,21 +332,35 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-  demoButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 30,
-    borderRadius: 15,
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  demoButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
+         contactButton: {
+           paddingVertical: 18,
+           paddingHorizontal: 30,
+           borderRadius: 20,
+           alignItems: "center",
+           elevation: 6,
+           shadowColor: "#000",
+           shadowOffset: { width: 0, height: 3 },
+           shadowOpacity: 0.3,
+           shadowRadius: 6,
+         },
+         contactButtonContent: {
+           flexDirection: "row",
+           alignItems: "center",
+           justifyContent: "center",
+         },
+         contactIcon: {
+           fontSize: 20,
+           marginRight: 8,
+         },
+         contactButtonText: {
+           fontSize: 18,
+           fontWeight: "bold",
+           marginRight: 8,
+         },
+         contactArrow: {
+           fontSize: 18,
+           fontWeight: "bold",
+         },
   loadingContainer: {
     padding: 20,
     alignItems: "center",
