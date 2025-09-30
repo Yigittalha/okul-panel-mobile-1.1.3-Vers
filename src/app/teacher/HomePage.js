@@ -205,10 +205,10 @@ const HomePage = () => {
           <View style={styles.welcomeContent}>
             <View style={styles.welcomeText}>
               <Text style={[styles.welcomeTitle, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>
-                Merhaba, {userInfo?.AdSoyad || 'Öğretmen'}! 👋
+                Bugün neye ihtiyacın var {userInfo?.AdSoyad || 'Öğretmen'}? 🤔
               </Text>
               <Text style={[styles.welcomeSubtitle, { color: isDark ? '#94A3B8' : '#64748B' }]}>
-                Bugün hangi işlemleri yapmak istiyorsunuz?
+                Ne yapmak istersin, hangi konularda yardıma ihtiyacın var?
               </Text>
             </View>
             <View style={[styles.welcomeIcon, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]}>
