@@ -19,7 +19,7 @@ import { BlurView } from "expo-blur";
 import { useTheme } from "../../state/theme";
 import { SessionContext } from "../../state/session";
 import { useSlideMenu } from "../../navigation/SlideMenuContext";
-import api, { fetchUserInfo } from "../../lib/api";
+import api, { fetchUserInfo, getUploadUrl } from "../../lib/api";
 // TeacherBottomMenu artık AppDrawer'da wrapper ile ekleniyor
 
 const { width, height } = Dimensions.get("window");
@@ -46,6 +46,37 @@ const HomePage = () => {
       }
     } catch (error) {
       console.log('Kullanıcı bilgisi alınamadı:', error);
+    }
+  };
+
+  const getUserPhotoUrl = () => {
+    try {
+      if (!userInfo) {
+        return null;
+      }
+
+      if (!userInfo?.Fotograf) {
+        return null;
+      }
+
+      // Fotoğraf string'i geldi mi kontrol et
+      if (
+        typeof userInfo.Fotograf !== "string" ||
+        userInfo.Fotograf.trim() === ""
+      ) {
+        return null;
+      }
+
+      const photoUrl = getUploadUrl(userInfo.Fotograf, schoolCode);
+
+      // URL oluşturulduysa kullan, yoksa null döndür
+      if (!photoUrl) {
+        return null;
+      }
+
+      return photoUrl;
+    } catch (error) {
+      return null;
     }
   };
 
@@ -211,8 +242,23 @@ const HomePage = () => {
                 Ne yapmak istersin, hangi konularda yardıma ihtiyacın var?
               </Text>
             </View>
-            <View style={[styles.welcomeIcon, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]}>
-              <Ionicons name="person" size={28} color={isDark ? '#94A3B8' : '#64748B'} />
+            <View style={[
+              styles.welcomeIcon,
+              { 
+                backgroundColor: isDark ? '#334155' : '#F1F5F9',
+                borderWidth: 1,
+                borderColor: isDark ? '#475569' : '#E2E8F0'
+              }
+            ]}>
+              {getUserPhotoUrl() ? (
+                <Image
+                  source={{ uri: getUserPhotoUrl() }}
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name="person" size={28} color={isDark ? '#94A3B8' : '#64748B'} />
+              )}
             </View>
           </View>
         </View>
@@ -222,9 +268,7 @@ const HomePage = () => {
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>
-            🚀 Hızlı İşlemler
-          </Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>🚀 Hızlı İşlemler</Text>
           <View style={styles.actionsGrid}>
             {quickActions.map((action) => (
               <TouchableOpacity
@@ -416,16 +460,31 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   welcomeIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 16,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
   },
   // Summary card stilleri kaldırıldı
   section: {
     marginBottom: 30,
+  },
+  sectionTitleContainer: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 20,

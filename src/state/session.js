@@ -195,8 +195,11 @@ export const SessionProvider = ({ children }) => {
     await setSchoolCode(schoolCode);
     if (schoolPhoto) {
       await setSchoolPhoto(schoolPhoto);
+    } else {
+      // Eğer schoolPhoto null ise, eski fotoğrafı da temizle
+      await setSchoolPhoto(null);
     }
-    setSessionState((prev) => ({ ...prev, schoolCode, schoolPhoto: schoolPhoto || prev.schoolPhoto }));
+    setSessionState((prev) => ({ ...prev, schoolCode, schoolPhoto }));
   };
 
   return (

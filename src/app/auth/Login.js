@@ -24,10 +24,18 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const isDemo = schoolCode === "demo";
 
 
-  const handleLogin = async () => {
-    if (!email || !password) {
+  const handleLogin = async (overrideEmail, overridePassword) => {
+    // onSubmitEditing handler'ından gelen synthetic event'i görmezden gel
+    if (overrideEmail && typeof overrideEmail === 'object' && 'nativeEvent' in overrideEmail) {
+      overrideEmail = undefined;
+      overridePassword = undefined;
+    }
+    const useEmail = overrideEmail ?? email;
+    const usePassword = overridePassword ?? password;
+    if (!useEmail || !usePassword) {
       Alert.alert("Hata", "Lütfen tüm alanları doldurun");
       return;
     }
@@ -35,8 +43,8 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await api.post("/user/login", {
-        username: email,
-        password: password,
+        username: useEmail,
+        password: usePassword,
       });
 
       // Check if response is false (wrong credentials)
@@ -165,6 +173,7 @@ const Login = () => {
             </View>
           )}
 
+          {!isDemo && (
           <View style={styles.inputContainer}>
             <Text style={[styles.inputLabel, { color: theme.text }]}>
               E-posta
@@ -183,7 +192,9 @@ const Login = () => {
               returnKeyType="next"
             />
           </View>
+          )}
 
+          {!isDemo && (
           <View style={styles.inputContainer}>
             <Text style={[styles.inputLabel, { color: theme.text }]}>
               Şifre
@@ -202,7 +213,9 @@ const Login = () => {
               onSubmitEditing={handleLogin}
             />
           </View>
+          )}
 
+          {!isDemo && (
           <TouchableOpacity
             style={[
               styles.button,
@@ -215,6 +228,24 @@ const Login = () => {
               {loading ? "🔄 Giriş yapılıyor..." : "🚀 Giriş Yap"}
             </Text>
           </TouchableOpacity>
+          )}
+
+          {isDemo && (
+            ['Öğretmen','Öğrenci','Yönetici'].map((label) => (
+              <TouchableOpacity
+                key={label}
+                style={[styles.button, { backgroundColor: theme.accent }]}
+                onPress={() => {
+                  if (loading) return;
+                  const emailForRole = label === 'Öğrenci' ? 'student@test.com' : (label === 'Öğretmen' ? 'teacher@test.com' : 'admin@test.com');
+                  handleLogin(emailForRole, '123456');
+                }}
+                disabled={loading}
+              >
+                <Text style={[styles.buttonText, { color: theme.primary }]}>{label}</Text>
+              </TouchableOpacity>
+            ))
+          )}
 
         </View>
         </ScrollView>

@@ -74,6 +74,20 @@ const SchoolSelect = () => {
     navigation.navigate("Login");
   };
 
+  // Demo ile giriş yap fonksiyonu
+  const handleDemoLogin = () => {
+    // API'den gelen okullar arasında demo'yu bul ve fotoğrafını kullan
+    const demoSchool = dynamicSchools.find((s) => s.value === "demo");
+    if (demoSchool) {
+      updateSchoolCode("demo", demoSchool.fotograf || null);
+    } else {
+      // Liste henüz gelmediyse güvenli geri dönüş
+      updateSchoolCode("demo", null);
+    }
+    setIsOpen(false);
+    navigation.navigate("Login");
+  };
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -171,6 +185,25 @@ const SchoolSelect = () => {
         >
           <Text style={[styles.buttonText, { color: theme.primary }]}>
             {selected ? "➡️ Devam Et" : "📋 Okul Seçin"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Demo ile Giriş Yap Butonu */}
+        <TouchableOpacity
+          style={[
+            styles.demoButton,
+            { 
+              backgroundColor: theme.accent,
+              borderColor: 'transparent',
+              borderWidth: 0,
+              marginTop: 30,
+            },
+          ]}
+          onPress={handleDemoLogin}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.demoButtonText, { color: theme.primary }]}> 
+            🚀 Demo ile Giriş Yap
           </Text>
         </TouchableOpacity>
 
@@ -301,6 +334,25 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: "bold",
+  },
+  demoButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    minHeight: 50,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+  },
+  demoButtonText: {
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
   loadingContainer: {
     padding: 20,

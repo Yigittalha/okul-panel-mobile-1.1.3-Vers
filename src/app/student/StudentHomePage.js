@@ -19,7 +19,7 @@ import { BlurView } from "expo-blur";
 import { useTheme } from "../../state/theme";
 import { SessionContext } from "../../state/session";
 import { useSlideMenu } from "../../navigation/SlideMenuContext";
-import api, { fetchUserInfo } from "../../lib/api";
+import api, { fetchUserInfo, getUploadUrl } from "../../lib/api";
 import StudentBottomMenu from "../../components/StudentBottomMenu";
 
 const { width, height } = Dimensions.get("window");
@@ -47,6 +47,7 @@ const StudentHomePage = () => {
       console.log('Kullanıcı bilgisi alınamadı:', error);
     }
   };
+  const photoUrl = userInfo?.Fotograf ? getUploadUrl(userInfo.Fotograf, schoolCode) : null;
 
   const quickActions = [
     {
@@ -208,16 +209,22 @@ const StudentHomePage = () => {
               </Text>
             </View>
             <View style={[styles.welcomeIcon, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]}>
-              <Ionicons name="person" size={28} color={isDark ? '#94A3B8' : '#64748B'} />
+              {photoUrl ? (
+                <Image
+                  source={{ uri: photoUrl }}
+                  style={{ width: 64, height: 64, borderRadius: 32 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name="person" size={28} color={isDark ? '#94A3B8' : '#64748B'} />
+              )}
             </View>
           </View>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>
-            🚀 Hızlı İşlemler
-          </Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>🚀 Hızlı İşlemler</Text>
           <View style={styles.actionsGrid}>
             {quickActions.map((action) => (
               <TouchableOpacity
@@ -422,6 +429,15 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 30,
+  },
+  sectionTitleContainer: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 20,
