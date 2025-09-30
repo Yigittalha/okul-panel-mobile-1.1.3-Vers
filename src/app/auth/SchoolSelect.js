@@ -74,10 +74,6 @@ const SchoolSelect = () => {
     navigation.navigate("Login");
   };
 
-  // İletişim sayfasına yönlendirme
-  const handleContact = () => {
-    navigation.navigate('Contact');
-  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -178,32 +174,6 @@ const SchoolSelect = () => {
           </Text>
         </TouchableOpacity>
 
-               {/* İletişim Butonu */}
-               <TouchableOpacity
-                 style={[
-                   styles.contactButton,
-                   { 
-                     backgroundColor: theme.accent,
-                     borderColor: theme.accent,
-                     borderWidth: 0,
-                     marginTop: 20,
-                     shadowColor: theme.accent,
-                     shadowOffset: { width: 0, height: 4 },
-                     shadowOpacity: 0.3,
-                     shadowRadius: 8,
-                   },
-                 ]}
-                 onPress={handleContact}
-                 activeOpacity={0.8}
-               >
-                 <View style={styles.contactButtonContent}>
-                   <Text style={styles.contactIcon}>📞</Text>
-                   <Text style={[styles.contactButtonText, { color: theme.primary }]}>
-                     İletişim
-                   </Text>
-                   <Text style={styles.contactArrow}>→</Text>
-                 </View>
-               </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -332,35 +302,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-         contactButton: {
-           paddingVertical: 18,
-           paddingHorizontal: 30,
-           borderRadius: 20,
-           alignItems: "center",
-           elevation: 6,
-           shadowColor: "#000",
-           shadowOffset: { width: 0, height: 3 },
-           shadowOpacity: 0.3,
-           shadowRadius: 6,
-         },
-         contactButtonContent: {
-           flexDirection: "row",
-           alignItems: "center",
-           justifyContent: "center",
-         },
-         contactIcon: {
-           fontSize: 20,
-           marginRight: 8,
-         },
-         contactButtonText: {
-           fontSize: 18,
-           fontWeight: "bold",
-           marginRight: 8,
-         },
-         contactArrow: {
-           fontSize: 18,
-           fontWeight: "bold",
-         },
   loadingContainer: {
     padding: 20,
     alignItems: "center",
