@@ -168,16 +168,12 @@ const Profile = () => {
         styles.header, 
         { 
           borderBottomColor: theme.border,
-          paddingTop: Math.max(insets.top + 10, 35), // Dinamik top padding
+          paddingTop: Math.max(insets.top + 10, 44), // Improved safe area padding
         }
       ]}>
-        <TouchableOpacity style={styles.menuButton} onPress={openMenu}>
-          <Text style={[styles.menuIcon, { color: theme.text }]}>☰</Text>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={[styles.backIcon, { color: theme.text }]}>←</Text>
         </TouchableOpacity>
-
-        <Text style={[styles.headerTitle, { color: theme.text }]}>
-          Öğretmen Profili
-        </Text>
 
         <View style={styles.placeholder} />
       </View>
@@ -187,7 +183,7 @@ const Profile = () => {
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
         onRefresh={handleRefresh}
-        contentContainerStyle={{ paddingBottom: 80 }} // Alt menü için minimize boşluk
+        contentContainerStyle={{ paddingBottom: 120 }} // Alt menü için daha fazla boşluk
       >
         <View
           style={[
@@ -328,30 +324,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 12,
     borderBottomWidth: 1,
+    minHeight: 60,
   },
-  menuButton: {
-    position: 'absolute',
-    left: 10,       // ← Eski konuma geri döndü
-    top: 35,        // ← Eski konuma geri döndü
-    zIndex: 10,
-    width: 80,      // ← Diğer sayfalardaki gibi büyük
-    height: 80,     // ← Diğer sayfalardaki gibi büyük
+  backButton: {
+    width: 48,
+    height: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent', // ← Daire yok, sadece ikon
-    borderRadius: 0, // ← Yuvarlaklık yok
+    backgroundColor: 'transparent',
   },
-  menuIcon: {
-    fontSize: 32,  // ← Diğer sayfalardaki gibi büyük ikon
+  backIcon: {
+    fontSize: 24,
     fontWeight: "bold",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: 'center',    // ← Yazıyı ortala
-    flex: 1,                // ← Kalan alanı kapla
   },
   placeholder: {
     width: 44, // Menu button ile aynı genişlik

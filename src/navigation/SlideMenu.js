@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuHeader: {
-    padding: 25,     // ← Biraz daha fazla padding (20 → 25)
+    padding: 15,     // ← Daha az padding (25 → 15)
     alignItems: "center",
     borderBottomWidth: 1,
     flexShrink: 0,
@@ -494,32 +494,32 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 12,
   },
   closeButtonText: {
     fontSize: 18,
     fontWeight: "bold",
   },
   menuLogo: {
-    width: 140,      // ← Biraz küçültüldü (160 → 140)
-    height: 140,     // ← Biraz küçültüldü (160 → 140)
-    marginBottom: 12, // ← Biraz daha az boşluk (15 → 12)
+    width: 120,      // ← Biraz büyütüldü (100 → 120)
+    height: 120,     // ← Biraz büyütüldü (100 → 120)
+    marginBottom: 10, // ← Biraz daha boşluk (8 → 10)
   },
   menuTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     letterSpacing: 1,
   },
   roleTitle: {
-    fontSize: 14,
+    fontSize: 12,
     opacity: 0.8,
-    marginTop: 5,
+    marginTop: 3,
   },
   schoolBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginTop: 6,
   },
   schoolText: {
     fontSize: 12,

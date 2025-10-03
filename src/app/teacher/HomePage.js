@@ -156,20 +156,12 @@ const HomePage = () => {
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-        <TouchableOpacity style={styles.menuButton} onPress={openMenu}>
-          <Text style={[styles.menuIcon, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>☰</Text>
-        </TouchableOpacity>
-        
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerContent}>
-          <View>
-            <Text style={[styles.greeting, { color: isDark ? '#E2E8F0' : '#64748B' }]}>
-              Merhaba,
-            </Text>
-            <Text style={[styles.userName, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>
-              {userInfo?.AdSoyad || 'Öğretmen'}
-            </Text>
-          </View>
+          <TouchableOpacity style={[styles.menuButton, { backgroundColor: 'transparent' }]} onPress={openMenu}>
+            <Text style={[styles.menuIcon, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>☰</Text>
+          </TouchableOpacity>
+          
           <TouchableOpacity
             style={[styles.profileButton, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}
             onPress={() => navigation.navigate('Profile')}
@@ -303,40 +295,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 10,
+    paddingBottom: 4,
     position: 'relative',
+    minHeight: 40,
   },
   menuButton: {
-    position: 'absolute',
-    left: 10,       // ← Daha sol (20 → 10)
-    top: 35,        // ← Daha yukarı (45 → 35)
-    zIndex: 10,
-    width: 80,      // ← Çok büyük (60 → 80)
-    height: 80,     // ← Çok büyük (60 → 80)
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent', // ← Daireyi kaldır
-    borderRadius: 0, // ← Yuvarlaklığı kaldır
+    backgroundColor: 'transparent',
   },
   menuIcon: {
-    fontSize: 32,  // ← İkonu büyüt (24 → 32)
+    fontSize: 32,
     fontWeight: 'bold',
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 20,
-  },
-  greeting: {
-    fontSize: 16,
-    fontWeight: '400',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginTop: 4,
+    marginTop: 0,
   },
   profileButton: {
     width: 48,
@@ -344,6 +324,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

@@ -159,16 +159,13 @@ const ParentDashboard = () => {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => openMenu("ParentDashboard")}
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
         >
-          <Text style={[styles.menuIcon, { color: theme.text }]}>☰</Text>
+          <Text style={[styles.backIcon, { color: theme.text }]}>←</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.headerTitle, { color: theme.text }]}>
-          Öğrenci Bilgileri
-        </Text>
-
+        <View style={styles.placeholder} />
       </View>
 
       <RefreshableScrollView
@@ -176,6 +173,7 @@ const ParentDashboard = () => {
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
         onRefresh={handleRefresh}
+        contentContainerStyle={{ paddingBottom: 120 }} // Alt menü için daha fazla boşluk
       >
         <View
           style={[
@@ -437,31 +435,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : 40, // ← Biraz daha fazla padding
-    paddingBottom: 16, // ← Biraz daha az padding
+    paddingTop: Platform.OS === 'ios' ? 44 : 40, // Improved safe area padding
+    paddingBottom: 12,
     borderBottomWidth: 1,
+    minHeight: 60,
   },
-  menuButton: {
-    position: 'absolute',
-    left: 10,       // ← Sol konumda
-    top: 35,        // ← Yukarıda
-    zIndex: 10,
-    width: 80,      // ← Büyük boyut
-    height: 80,     // ← Büyük boyut
+  backButton: {
+    width: 48,
+    height: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent', // ← Daire yok
-    borderRadius: 0, // ← Yuvarlaklık yok
+    backgroundColor: 'transparent',
   },
-  menuIcon: {
-    fontSize: 32,  // ← Büyük ikon
+  backIcon: {
+    fontSize: 24,
     fontWeight: "bold",
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: 'center',    // ← Yazıyı ortala
-    flex: 1,                // ← Kalan alanı kapla
+  placeholder: {
+    width: 48,
   },
   content: {
     flex: 1,
