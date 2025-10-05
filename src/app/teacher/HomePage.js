@@ -92,6 +92,14 @@ const HomePage = () => {
       description: 'Öğrenci yoklaması'
     },
     {
+      id: 'schedule',
+      title: 'Ders Programı',
+      icon: 'calendar',
+      color: '#EF4444',
+      route: 'TeacherScheduleScreen',
+      description: 'Haftalık program'
+    },
+    {
       id: 'homework',
       title: 'Ödev Ver',
       icon: 'document-text',
@@ -114,14 +122,6 @@ const HomePage = () => {
       color: '#8B5CF6',
       route: 'MessageInbox',
       description: 'Gelen mesajlar'
-    },
-    {
-      id: 'schedule',
-      title: 'Ders Programı',
-      icon: 'calendar',
-      color: '#EF4444',
-      route: 'TeacherScheduleScreen',
-      description: 'Haftalık program'
     },
     {
       id: 'students',

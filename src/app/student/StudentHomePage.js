@@ -51,6 +51,22 @@ const StudentHomePage = () => {
 
   const quickActions = [
     {
+      id: 'absences',
+      title: 'Devamsızlık',
+      icon: 'warning',
+      color: '#8B5CF6',
+      route: 'StudentAbsences',
+      description: 'Devamsızlık geçmişi'
+    },
+    {
+      id: 'schedule',
+      title: 'Ders Programı',
+      icon: 'calendar',
+      color: '#EF4444',
+      route: 'StudentScheduleScreen',
+      description: 'Haftalık program'
+    },
+    {
       id: 'homework',
       title: 'Ödevlerim',
       icon: 'document-text',
@@ -75,24 +91,8 @@ const StudentHomePage = () => {
       description: 'Not bilgilerim'
     },
     {
-      id: 'schedule',
-      title: 'Ders Programı',
-      icon: 'calendar',
-      color: '#EF4444',
-      route: 'StudentScheduleScreen',
-      description: 'Haftalık program'
-    },
-    {
-      id: 'absences',
-      title: 'Devamsızlık',
-      icon: 'warning',
-      color: '#8B5CF6',
-      route: 'StudentAbsences',
-      description: 'Devamsızlık geçmişi'
-    },
-    {
       id: 'messages',
-      title: 'Mesajlar',
+      title: 'Gelen Kutusu',
       icon: 'mail',
       color: '#06B6D4',
       route: 'StudentMessageInbox',

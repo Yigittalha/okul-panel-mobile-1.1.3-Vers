@@ -75,11 +75,12 @@ const Login = () => {
             role = "parent"; // Default fallback
         }
 
-        // Only save token, role and schoolCode - let dashboards fetch user data
+        // Only save token, role, schoolCode and schoolPhoto - let dashboards fetch user data
         await setSession({
           accessToken: token,
           role: role,
           schoolCode,
+          schoolPhoto,
         });
 
         // FCM token'ı gönder
@@ -176,10 +177,10 @@ const Login = () => {
           {!isDemo && (
           <View style={styles.inputContainer}>
             <Text style={[styles.inputLabel, { color: theme.text }]}>
-              E-posta
+              Kullanıcı Adı
             </Text>
             <TextInput
-              placeholder="E-posta adresinizi girin"
+              placeholder="Kullanıcı adını giriniz"
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"

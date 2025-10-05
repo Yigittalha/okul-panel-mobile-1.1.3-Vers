@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { SessionContext } from "../../state/session";
@@ -82,8 +83,9 @@ const HomeworkGivenDetail = () => {
     if (homework.Fotograf) {
       const photoUrl = getUploadUrl(homework.Fotograf, schoolCode);
       if (photoUrl) {
-        // Burada fotoğrafı büyütme işlemi yapılabilir
-        Alert.alert("Fotoğraf", "Fotoğraf görüntüleme özelliği eklenecek");
+        Linking.openURL(photoUrl).catch(() => {
+          Alert.alert("Hata", "Fotoğraf açılamadı.");
+        });
       }
     }
   };

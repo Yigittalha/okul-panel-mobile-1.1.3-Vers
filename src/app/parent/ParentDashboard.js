@@ -234,7 +234,7 @@ const ParentDashboard = () => {
               🆔 TC Kimlik:
             </Text>
             <Text style={[styles.infoValue, { color: theme.text }]}>
-              {studentData?.TCKimlikNo}
+              {studentData?.TCKimlikNo ? studentData.TCKimlikNo.substring(0, 4) + '*******' : ''}
             </Text>
           </View>
 
@@ -256,23 +256,7 @@ const ParentDashboard = () => {
             </Text>
           </View>
 
-          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.infoLabel, { color: theme.text }]}>
-              🏥 Sağlık Durumu:
-            </Text>
-            <Text style={[styles.infoValue, { color: theme.text }]}>
-              {studentData?.Sag}
-            </Text>
-          </View>
 
-          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.infoLabel, { color: theme.text }]}>
-              ♿ Engel Durumu:
-            </Text>
-            <Text style={[styles.infoValue, { color: theme.text }]}>
-              {studentData?.Engel ? "Var" : "Yok"}
-            </Text>
-          </View>
         </View>
 
         <View style={[styles.familyCard, { backgroundColor: theme.card }]}>
@@ -360,32 +344,8 @@ const ParentDashboard = () => {
             </View>
           </View>
 
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.text }]}>
-              💰 Aylık Gelir:
-            </Text>
-            <Text style={[styles.infoValue, { color: theme.text }]}>
-              {studentData?.AylikGelir} ₺
-            </Text>
-          </View>
         </View>
 
-        {studentData?.SuregenRahatsizlik &&
-          studentData?.SuregenRahatsizlik !== "Yok" && (
-            <View style={styles.healthCard}>
-              <Text style={[styles.cardTitle, { color: theme.text }]}>
-                🏥 Sağlık Bilgileri
-              </Text>
-              <View style={styles.infoRow}>
-                <Text style={[styles.infoLabel, { color: theme.text }]}>
-                  ⚕️ Süreğen Rahatsızlık:
-                </Text>
-                <Text style={[styles.infoValue, { color: theme.text }]}>
-                  {studentData?.SuregenRahatsizlik}
-                </Text>
-              </View>
-            </View>
-          )}
 
         {/* Şifre Değiştir Butonu */}
         <TouchableOpacity

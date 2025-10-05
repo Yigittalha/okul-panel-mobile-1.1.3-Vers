@@ -17,6 +17,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
+import DocumentPicker from 'react-native-document-picker';
 import api from "../../lib/api";
 import { SessionContext } from "../../state/session";
 import { useTheme } from "../../state/theme";
@@ -131,28 +132,70 @@ const HomeworkAssignment = () => {
     }
   };
 
-  // Photo picker function
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
+  // File picker function (Photo + PDF)
+  const pickFile = async () => {
+    Alert.alert(
+      "Dosya Seç",
+      "Hangi tür dosya seçmek istiyorsunuz?",
+      [
+        {
+          text: "Fotoğraf Seç",
+          onPress: async () => {
+            try {
+              const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.8,
+              });
 
-      if (!result.canceled) {
-        setPhoto(result.assets[0]);
-        // TODO: remove before prod
-        // console.log('📸 Photo selected:', result.assets[0].uri);
-      }
-    } catch (error) {
-      console.log("❌ Image picker error:", error);
-      Alert.alert("Hata", "Fotoğraf seçilirken bir hata oluştu.");
-    }
+              if (!result.canceled) {
+                setPhoto(result.assets[0]);
+              }
+            } catch (error) {
+              console.log("❌ Image picker error:", error);
+              Alert.alert("Hata", "Fotoğraf seçilirken bir hata oluştu.");
+            }
+          }
+        },
+        {
+          text: "PDF Seç",
+          onPress: async () => {
+            try {
+              const result = await DocumentPicker.pick({
+                type: [DocumentPicker.types.pdf],
+              });
+
+              if (result && result.length > 0) {
+                const file = result[0];
+                // PDF'yi photo state'inde saklayıp backend'e aynı isimle gönderiyoruz
+                setPhoto({
+                  uri: file.uri,
+                  name: file.name,
+                  type: 'application/pdf',
+                  size: file.size
+                });
+                Alert.alert("Başarılı", `PDF dosyası seçildi: ${file.name}`);
+              }
+            } catch (error) {
+              if (DocumentPicker.isCancel(error)) {
+                // Kullanıcı iptal etti
+                return;
+              }
+              console.log("PDF seçme hatası:", error);
+              Alert.alert("Hata", "PDF seçilirken bir hata oluştu.");
+            }
+          }
+        },
+        {
+          text: "İptal",
+          style: "cancel"
+        }
+      ]
+    );
   };
 
-  // Remove photo
+  // Remove file
   const removePhoto = () => {
     setPhoto(null);
   };
@@ -299,14 +342,14 @@ const HomeworkAssignment = () => {
         }
       });
 
-      // Add photo if selected
+      // Add file if selected (photo or PDF)
       if (photo) {
-        const photoFile = {
+        const fileToSend = {
           uri: photo.uri,
-          type: "image/jpeg",
-          name: "homework_photo.jpg",
+          type: photo.type || "image/jpeg",
+          name: photo.name || "homework_photo.jpg",
         };
-        formDataToSend.append("photo", photoFile);
+        formDataToSend.append("photo", fileToSend);
       }
 
       // TODO: remove before prod
@@ -619,15 +662,31 @@ const HomeworkAssignment = () => {
 
         </View>
 
-        {/* Photo Section */}
+        {/* File Section */}
         <View style={[styles.formCard, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            Fotoğraf Ekle (İsteğe Bağlı)
+            Fotoğraf veya PDF Ekle (İsteğe Bağlı)
           </Text>
 
           {photo ? (
             <View style={styles.photoContainer}>
-              <Image source={{ uri: photo.uri }} style={styles.photoPreview} />
+              {photo.type === 'application/pdf' ? (
+                // PDF preview
+                <View style={styles.pdfPreview}>
+                  <Text style={[styles.pdfIcon, { color: theme.accent }]}>📄</Text>
+                  <Text style={[styles.pdfName, { color: theme.text }]} numberOfLines={2}>
+                    {photo.name}
+                  </Text>
+                  {photo.size && (
+                    <Text style={[styles.pdfSize, { color: theme.muted }]}>
+                      {(photo.size / 1024 / 1024).toFixed(2)} MB
+                    </Text>
+                  )}
+                </View>
+              ) : (
+                // Photo preview
+                <Image source={{ uri: photo.uri }} style={styles.photoPreview} />
+              )}
               <TouchableOpacity
                 style={[
                   styles.removePhotoButton,
@@ -636,7 +695,7 @@ const HomeworkAssignment = () => {
                 onPress={removePhoto}
               >
                 <Text style={[styles.removePhotoText, { color: "#fff" }]}>
-                  ❌ Fotoğrafı Kaldır
+                  ❌ Dosyayı Kaldır
                 </Text>
               </TouchableOpacity>
             </View>
@@ -650,10 +709,10 @@ const HomeworkAssignment = () => {
                   borderColor: theme.border,
                 },
               ]}
-              onPress={pickImage}
+              onPress={pickFile}
             >
               <Text style={[styles.photoButtonText, { color: theme.accent }]}>
-                📸 Fotoğraf Seç
+                📎 Fotoğraf veya PDF Seç
               </Text>
             </TouchableOpacity>
           )}
@@ -911,6 +970,25 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 8,
     marginBottom: 12,
+  },
+  pdfPreview: {
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+  },
+  pdfIcon: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  pdfName: {
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 4,
+    maxWidth: 250,
+  },
+  pdfSize: {
+    fontSize: 12,
   },
   removePhotoButton: {
     paddingHorizontal: 16,

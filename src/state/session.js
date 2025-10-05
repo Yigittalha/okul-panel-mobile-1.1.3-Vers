@@ -169,12 +169,14 @@ export const SessionProvider = ({ children }) => {
     role,
     user,
     schoolCode,
+    schoolPhoto,
   }) => {
     if (accessToken) await setToken(accessToken);
     if (refreshToken) await setRefreshToken(refreshToken);
     if (role) await setRole(role);
     if (user) await setUser(user);
     if (schoolCode) await setSchoolCode(schoolCode);
+    if (schoolPhoto !== undefined) await setSchoolPhoto(schoolPhoto);
 
     // Only set isAuthenticated to true if we have access token and role
     if (accessToken && role) {
@@ -183,11 +185,12 @@ export const SessionProvider = ({ children }) => {
         role,
         user,
         schoolCode,
+        schoolPhoto,
         loading: false,
       });
     } else {
       // If only schoolCode is being set, don't change authentication state
-      setSessionState((prev) => ({ ...prev, schoolCode }));
+      setSessionState((prev) => ({ ...prev, schoolCode, schoolPhoto }));
     }
   };
 

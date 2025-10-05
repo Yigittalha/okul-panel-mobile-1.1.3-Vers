@@ -24,7 +24,7 @@ import { MENU_SCHEMA } from "./menuSchema";
  * AppDrawer'dan ayrılmış versiyonu
  */
 export default function SlideMenu() {
-  const { role, schoolCode, clearSession } = useContext(SessionContext);
+  const { role, schoolCode, schoolPhoto, clearSession } = useContext(SessionContext);
   const { theme, isDark } = useTheme();
   const navigation = useNavigation();
   const { menuVisible, closeMenu, resetMenuState } = useSlideMenu();
@@ -355,7 +355,7 @@ export default function SlideMenu() {
             </TouchableOpacity>
 
             <Image
-              source={require("../../assets/okul-panel.png")}
+              source={schoolPhoto ? { uri: schoolPhoto } : require("../../assets/okul-panel.png")}
               style={styles.menuLogo}
               resizeMode="contain"
             />
