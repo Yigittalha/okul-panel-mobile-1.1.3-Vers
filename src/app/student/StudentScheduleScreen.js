@@ -3,15 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SectionList,
-  FlatList,
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
-  SafeAreaView,
-  Platform,
-  Dimensions,
+  FlatList,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../state/theme";
 import { SessionContext } from "../../state/session";
 import { useContext } from "react";
@@ -20,7 +17,6 @@ import api, { fetchUserInfo } from "../../lib/api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import StudentBottomMenu from "../../components/StudentBottomMenu";
 import FeaturePageHeader from "../../components/FeaturePageHeader";
-// ThemeToggle sadece ParentDashboard'da gösterilecek
 
 export default function StudentScheduleScreen() {
   const { theme } = useTheme();
@@ -31,7 +27,7 @@ export default function StudentScheduleScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [expandedDay, setExpandedDay] = useState(null); // Açılan gün
+  const [expandedDay, setExpandedDay] = useState(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -41,7 +37,6 @@ export default function StudentScheduleScreen() {
 
   const fetchSchedule = async () => {
     try {
-      // Kullanıcı bilgilerini /user/info API'sinden al
       const userInfo = await fetchUserInfo(true);
       console.log("🔍 Kullanıcı bilgileri:", userInfo);
       
@@ -73,6 +68,7 @@ export default function StudentScheduleScreen() {
     } finally {
       if (mountedRef.current) {
         setLoading(false);
+        setRefreshing(false);
       }
     }
   };
@@ -80,7 +76,6 @@ export default function StudentScheduleScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchSchedule();
-    setRefreshing(false);
   };
 
   const groupByDay = (data) => {
@@ -105,12 +100,32 @@ export default function StudentScheduleScreen() {
       }));
   };
 
-  // Günler listesi - filtreleme için
   const daysList = schedule.map(day => ({
     day: day.title,
     count: day.data.length,
     data: day.data
   }));
+
+  const renderLoading = () => (
+    <View style={[styles.center, { backgroundColor: theme.background }]}> 
+      <ActivityIndicator size="large" color={theme.accent} />
+      <Text style={[styles.info, { color: theme.text, marginTop: 8 }]}>Yükleniyor...</Text>
+    </View>
+  );
+
+  const renderError = () => (
+    <View style={[styles.center, { backgroundColor: theme.background }]}> 
+      <Text style={[styles.error, { color: theme.danger }]}>Hata: {error}</Text>
+      <Text style={[styles.link, { color: theme.accent }]} onPress={fetchSchedule}>Tekrar dene</Text>
+    </View>
+  );
+
+  const renderEmpty = () => (
+    <View style={[styles.center, { backgroundColor: theme.background }]}> 
+      <Ionicons name="calendar-outline" size={28} color={theme.muted || theme.text} />
+      <Text style={[styles.info, { color: theme.text, marginTop: 6 }]}>Gösterilecek ders programı bulunamadı.</Text>
+    </View>
+  );
 
   const renderDayItem = ({ item }) => {
     const isExpanded = expandedDay === item.day;
@@ -118,188 +133,96 @@ export default function StudentScheduleScreen() {
     return (
       <View>
         <TouchableOpacity
-          style={[styles.dayCard, { backgroundColor: theme.card }]}
+          style={[styles.dayCard, { backgroundColor: theme.card, borderColor: theme.border }]}
           onPress={() => {
             setExpandedDay(isExpanded ? null : item.day);
           }}
           activeOpacity={0.7}
         >
-          <View style={[styles.dayIconContainer, { backgroundColor: theme.accent }]}>
-            <Text style={styles.dayIcon}>{getDayIcon(item.day)}</Text>
+          <View style={[styles.dayIconWrap, { backgroundColor: theme.accent + "22" }]}>
+            <Ionicons name="calendar-outline" size={24} color={theme.accent} />
           </View>
           <View style={styles.dayContent}>
             <Text style={[styles.dayTitle, { color: theme.text }]}>{item.day}</Text>
-            <Text style={[styles.dayCount, { color: "#9CA3AF" }]}>
+            <Text style={[styles.dayCount, { color: theme.muted || theme.text }]}>
               {item.count} ders
             </Text>
           </View>
-          <Text style={[styles.chevronIcon, { color: "#9CA3AF" }]}>
-            {isExpanded ? "▲" : "▼"}
-          </Text>
+          <Ionicons 
+            name={isExpanded ? "chevron-up" : "chevron-down"} 
+            size={20} 
+            color={theme.muted || theme.text} 
+          />
         </TouchableOpacity>
         
-        {/* Açılan günün dersleri */}
         {isExpanded && (
           <View style={styles.expandedContent}>
-            {item.data.map((lesson, index) => (
-              <View key={index} style={[styles.lessonCard, { backgroundColor: theme.card }]}>
-                <View style={styles.cardContent}>
-                  <View style={styles.timeContainer}>
-                    <View style={[styles.timeBadge, { backgroundColor: theme.accent + '15' }]}>
-                      <Text style={[styles.timeText, { color: theme.accent }]}>🕐</Text>
-                      <Text style={[styles.timeValue, { color: theme.accent }]}>{lesson.DersSaati}</Text>
-                    </View>
+            {item.data.map((lesson, index) => {
+              const saat = lesson.DersSaati || "";
+              const ders = lesson.Ders || "";
+              const ogretmen = lesson.AdSoyad || "";
+              const derslik = lesson.Derslik || "";
+              
+              return (
+                <View key={index} style={[styles.lessonCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                  <View style={[styles.lessonIconWrap, { backgroundColor: theme.accent + "22" }]}>
+                    <Ionicons name="book-outline" size={16} color={theme.accent} />
                   </View>
-                  
-                  <View style={styles.lessonInfo}>
-                    <Text style={[styles.lessonTitle, { color: theme.text }]}>{lesson.Ders}</Text>
-                    
-                    <View style={styles.detailsRow}>
-                      <View style={styles.teacherContainer}>
-                        <Text style={[styles.teacherIcon, { color: "#9CA3AF" }]}>👨‍🏫</Text>
-                        <Text style={[styles.teacherName, { color: "#9CA3AF" }]}>{lesson.AdSoyad}</Text>
+                  <View style={styles.lessonContent}>
+                    <Text style={[styles.lessonTitle, { color: theme.text }]} numberOfLines={1}>
+                      {ders} <Text style={[styles.lessonTime, { color: theme.muted || theme.text }]}>({saat})</Text>
+                    </Text>
+                    <View style={styles.lessonMetaWrap}>
+                      <View style={[styles.lessonChip, { borderColor: theme.border, backgroundColor: theme.card }]}>
+                        <Ionicons name="person-outline" size={12} color={theme.text} style={{ marginRight: 4 }} />
+                        <Text style={[styles.lessonChipText, { color: theme.text }]} numberOfLines={1}>{ogretmen}</Text>
                       </View>
-                      
-                      <View style={[styles.roomBadge, { backgroundColor: theme.primary }]}>
-                        <Text style={[styles.roomIcon, { color: "#1F2937" }]}>📍</Text>
-                        <Text style={[styles.roomText, { color: "#1F2937" }]}>{lesson.Derslik}</Text>
+                      <View style={[styles.lessonChip, { borderColor: theme.border, backgroundColor: theme.card }]}> 
+                        <Ionicons name="location-outline" size={12} color={theme.text} style={{ marginRight: 4 }} />
+                        <Text style={[styles.lessonChipText, { color: theme.text }]} numberOfLines={1}>{derslik}</Text>
                       </View>
                     </View>
                   </View>
                 </View>
-                
-                <View style={[styles.cardAccent, { backgroundColor: theme.accent }]} />
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </View>
     );
   };
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.lessonCard, { backgroundColor: theme.card }]}>
-      <View style={styles.cardContent}>
-        <View style={styles.timeContainer}>
-          <View style={[styles.timeBadge, { backgroundColor: theme.accent + '15' }]}>
-            <Text style={[styles.timeText, { color: theme.accent }]}>🕐</Text>
-            <Text style={[styles.timeValue, { color: theme.accent }]}>{item.DersSaati}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.lessonInfo}>
-          <Text style={[styles.lessonTitle, { color: theme.text }]}>{item.Ders}</Text>
-          
-          <View style={styles.detailsRow}>
-            <View style={styles.teacherContainer}>
-              <Text style={[styles.teacherIcon, { color: "#9CA3AF" }]}>👨‍🏫</Text>
-              <Text style={[styles.teacherName, { color: "#9CA3AF" }]}>{item.AdSoyad}</Text>
-            </View>
-            
-            <View style={[styles.roomBadge, { backgroundColor: theme.primary }]}>
-              <Text style={[styles.roomIcon, { color: "#1F2937" }]}>📍</Text>
-              <Text style={[styles.roomText, { color: "#1F2937" }]}>{item.Derslik}</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-      
-      <View style={[styles.cardAccent, { backgroundColor: theme.accent }]} />
-    </View>
-  );
-
-  const getDayIcon = (day) => {
-    const icons = {
-      "Pazartesi": "📅",
-      "Salı": "📋",
-      "Çarşamba": "📊",
-      "Perşembe": "📚",
-      "Cuma": "🎯",
-      "Cumartesi": "🌟",
-      "Pazar": "☀️"
-    };
-    return icons[day] || "📅";
-  };
-
-  const renderSectionHeader = ({ section: { title } }) => (
-    <View style={[styles.dayHeader, { backgroundColor: theme.card }]}>
-      <View style={styles.dayHeaderContent}>
-        <View style={[styles.dayIconContainer, { backgroundColor: theme.accent }]}>
-          <Text style={styles.dayIcon}>{getDayIcon(title)}</Text>
-        </View>
-        <Text style={[styles.dayTitle, { color: theme.text }]}>{title}</Text>
-        <View style={[styles.dayDivider, { backgroundColor: theme.border }]} />
-      </View>
-    </View>
-  );
-
-  const renderNavbar = () => (
-    <FeaturePageHeader
-      title="Ders Programı"
-      onBackPress={() => navigation.goBack()}
-    />
-  );
-
-  if (loading) {
-    return (
-      <View style={[styles.safeArea, { backgroundColor: theme.background }]}>
-        {renderNavbar()}
-        <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
-          <ActivityIndicator size="large" color={theme.accent} />
-          <Text style={[styles.loadingText, { color: theme.text }]}>Ders programı yükleniyor...</Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={[styles.safeArea, { backgroundColor: theme.background }]}>
-        {renderNavbar()}
-        <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
-          <Text style={[styles.errorText, { color: theme.danger }]}>{error}</Text>
-          <TouchableOpacity style={[styles.retryButton, { borderColor: theme.accent }]} onPress={fetchSchedule}>
-            <Text style={[styles.retryText, { color: theme.accent }]}>Tekrar Dene</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  if (schedule.length === 0) {
-    return (
-      <View style={[styles.safeArea, { backgroundColor: theme.background }]}>
-        {renderNavbar()}
-        <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
-          <Text style={[styles.emptyText, { color: theme.text }]}>Bu sınıf için program bulunamadı</Text>
-        </View>
-      </View>
-    );
-  }
-
   return (
-    <View style={[styles.safeArea, { backgroundColor: theme.background }]}>
-      {renderNavbar()}
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <FeaturePageHeader 
+        title="Ders Programı" 
+        onBackPress={() => navigation.goBack()}
+      />
+
+      {loading ? (
+        renderLoading()
+      ) : error ? (
+        renderError()
+      ) : daysList.length === 0 ? (
+        renderEmpty()
+      ) : (
         <FlatList
           data={daysList}
           keyExtractor={(item) => item.day}
           renderItem={renderDayItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 80, 100) }}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
+            <RefreshControl 
+              refreshing={refreshing} 
               onRefresh={onRefresh}
               colors={[theme.accent]}
               tintColor={theme.accent}
-              progressBackgroundColor={theme.card}
             />
           }
+          contentContainerStyle={{ padding: 12, paddingBottom: Math.max(insets.bottom + 80, 100) }}
+          showsVerticalScrollIndicator={false}
         />
-      </View>
+      )}
       
-      {/* Alt Menü */}
       <StudentBottomMenu 
         navigation={navigation} 
         currentRoute="StudentScheduleScreen" 
@@ -309,245 +232,92 @@ export default function StudentScheduleScreen() {
 }
 
 const styles = StyleSheet.create({
-  // Main Container Styles
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
+  container: { flex: 1 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 16 },
+  info: { fontSize: 14 },
+  error: { fontSize: 14, fontWeight: "600" },
+  link: { marginTop: 6, fontSize: 14, fontWeight: "600" },
   
-  // Navbar Styles
-  navbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-    minHeight: 56,
-  },
-  backButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  backIcon: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    lineHeight: 26,
-  },
-  navbarTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 16,
-  },
-  navbarRight: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 40,
-    height: 40,
-  },
-  
-  // Lesson Card Styles (Shadow Removed)
-  lessonCard: {
-    marginVertical: 8,
-    marginHorizontal: 4,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  cardContent: {
-    flexDirection: 'row',
-    padding: 20,
-    alignItems: 'flex-start',
-  },
-  cardAccent: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-  },
-  
-  // Time Container Styles
-  timeContainer: {
-    marginRight: 16,
-    alignItems: 'center',
-  },
-  timeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    alignItems: 'center',
-    minWidth: 80,
-  },
-  timeText: {
-    fontSize: 16,
-    marginBottom: 2,
-  },
-  timeValue: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  
-  // Lesson Info Styles
-  lessonInfo: {
-    flex: 1,
-  },
-  lessonTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-    letterSpacing: 0.3,
-  },
-  detailsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    minHeight: 32,
-  },
-  
-  // Teacher Styles
-  teacherContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
-  },
-  teacherIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  teacherName: {
-    fontSize: 14,
-    fontWeight: '500',
-    flexShrink: 1,
-  },
-  
-  // Room Badge Styles
-  roomBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    flexShrink: 0,
-  },
-  roomIcon: {
-    fontSize: 12,
-    marginRight: 4,
-  },
-  roomText: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  
-  // Day Header Styles (Shadow Removed)
-  dayHeader: {
-    marginTop: 24,
-    marginBottom: 8,
-    marginHorizontal: 4,
-    borderRadius: 12,
-  },
-  dayHeaderContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  dayIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  dayIcon: {
-    fontSize: 18,
-  },
-  dayTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  dayDivider: {
-    flex: 1,
-    height: 1,
-    marginLeft: 12,
-    opacity: 0.3,
-  },
-  
-  // Loading and Error Styles
-  loadingText: {
-    fontSize: 16,
-    marginTop: 16,
-    textAlign: "center",
-    fontWeight: '500',
-  },
-  errorText: {
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 16,
-    fontWeight: '500',
-  },
-  retryButton: {
-    padding: 16,
-    borderWidth: 2,
-    borderRadius: 12,
-    alignItems: "center",
-    marginHorizontal: 32,
-  },
-  retryText: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  emptyText: {
-    fontSize: 16,
-    textAlign: "center",
-    fontWeight: '500',
-  },
-  
-  // Gün kartı stilleri - mevcut tasarımı koruyarak
+  // Gün kartı stilleri
   dayCard: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginVertical: 8,
-    marginHorizontal: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginVertical: 4,
+  },
+  dayIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
   },
   dayContent: {
     flex: 1,
-    marginLeft: 12,
+  },
+  dayTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 2,
   },
   dayCount: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
-    marginTop: 4,
-  },
-  chevronIcon: {
-    fontSize: 16,
-    fontWeight: "bold",
   },
   
   // Açılan içerik stilleri
   expandedContent: {
     marginTop: 8,
     marginBottom: 8,
+  },
+  lessonCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginVertical: 3,
+    marginLeft: 16,
+  },
+  lessonIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  lessonContent: {
+    flex: 1,
+  },
+  lessonTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  lessonTime: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  lessonMetaWrap: {
+    flexDirection: "row",
+    marginTop: 4,
+  },
+  lessonChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginRight: 6,
+  },
+  lessonChipText: {
+    fontSize: 10,
+    fontWeight: "500",
   },
 });

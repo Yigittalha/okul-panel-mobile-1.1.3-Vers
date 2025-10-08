@@ -1,12 +1,19 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../state/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const FeaturePageHeader = ({ title, onBackPress, showBackButton = true, rightIcon, onRightIconPress, isInsideSafeArea = false }) => {
-  // Sabit değerler kullan - flicker sorununu tamamen önler
+  const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
+  
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { 
+      backgroundColor: theme.card,
+      borderBottomColor: theme.border,
+      paddingTop: Platform.OS === 'ios' ? insets.top + 10 : 16,
+    }]}>
       <View style={styles.headerContent}>
         {showBackButton && (
           <TouchableOpacity 
@@ -17,13 +24,13 @@ const FeaturePageHeader = ({ title, onBackPress, showBackButton = true, rightIco
             <Ionicons 
               name="arrow-back" 
               size={24} 
-              color="#1E293B" 
+              color={theme.text} 
             />
           </TouchableOpacity>
         )}
         
         <Text style={[styles.title, { 
-          color: "#1E293B",
+          color: theme.text,
           marginLeft: showBackButton ? 12 : 0
         }]}>
           {title}
@@ -32,9 +39,9 @@ const FeaturePageHeader = ({ title, onBackPress, showBackButton = true, rightIco
         {rightIcon && (
           <TouchableOpacity 
             style={[styles.rightIconButton, { 
-              backgroundColor: '#FFD60A',
+              backgroundColor: theme.accent,
               borderRadius: 20,
-              shadowColor: '#FFD60A',
+              shadowColor: theme.accent,
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.3,
               shadowRadius: 4,
@@ -57,12 +64,9 @@ const FeaturePageHeader = ({ title, onBackPress, showBackButton = true, rightIco
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: 50,
     paddingBottom: 16,
     paddingHorizontal: 20,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

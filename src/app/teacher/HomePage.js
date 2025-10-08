@@ -28,7 +28,7 @@ const HomePage = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
-  const { schoolCode } = useContext(SessionContext);
+  const { schoolCode, schoolPhoto } = useContext(SessionContext);
   const { openMenu } = useSlideMenu();
   const [userInfo, setUserInfo] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -212,9 +212,17 @@ const HomePage = () => {
               </View>
               
               <View style={styles.schoolInfo}>
-                <View style={[styles.schoolLogo, { backgroundColor: isDark ? '#334155' : '#FFFFFF' }]}>
-                  <Ionicons name="school" size={24} color={isDark ? '#94A3B8' : '#64748B'} />
-                </View>
+                {schoolPhoto ? (
+                  <Image
+                    source={{ uri: schoolPhoto }}
+                    style={styles.schoolLogoImage}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <View style={[styles.schoolLogo, { backgroundColor: isDark ? '#334155' : '#FFFFFF' }]}>
+                    <Ionicons name="school" size={24} color={isDark ? '#94A3B8' : '#64748B'} />
+                  </View>
+                )}
                 <Text style={[styles.schoolName, { color: isDark ? '#E2E8F0' : '#1E293B' }]}>
                   {schoolCode || 'Okul Adı'}
                 </Text>
@@ -359,11 +367,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    justifyContent: 'flex-start',
+    marginLeft: -10,
   },
   logoContainer: {
     width: 70,
     height: 70,
-    marginRight: 20,
+    marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -375,8 +385,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   brandLogo: {
-    width: 60,
-    height: 60,
+    width: 75,
+    height: 75,
   },
   brandText: {
     flex: 1,
@@ -395,9 +405,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   schoolLogo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -411,6 +421,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  schoolLogoImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   welcomeCard: {
     borderRadius: 16,

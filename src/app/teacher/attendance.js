@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback, useContext } from 'react';
-import { View, Text, ActivityIndicator, FlatList, TouchableOpacity, Alert, StyleSheet, ScrollView, TextInput } from 'react-native';
+import React, { useEffect, useState, useCallback, useContext, useMemo } from 'react';
+import { View, Text, ActivityIndicator, FlatList, TouchableOpacity, Alert, StyleSheet, Modal, ScrollView, TextInput } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SessionContext } from '../../state/session';
@@ -10,8 +10,6 @@ import FeaturePageHeader from '../../components/FeaturePageHeader';
 const ATTENDANCE_URL = '/teacher/attendance';
 const ATTENDANCE_ADD_URL = '/teacher/attendanceadd';
 
-
-
 export default function AttendanceLesson() {
   const navigation = useNavigation();
   const route = useRoute();
@@ -21,18 +19,20 @@ export default function AttendanceLesson() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [students, setStudents] = useState([]);
-  const [sending, setSending] = useState({}); // { [OgrenciId]: boolean }
-  const [gainOptions, setGainOptions] = useState([]); // select options from /schedule/gain
-  const [gainLoading, setGainLoading] = useState(false);
-  const [gainError, setGainError] = useState(null);
-  const [selectedGains, setSelectedGains] = useState([]); // multi-select
-  const [gainExpanded, setGainExpanded] = useState(false);
-  const [gainSending, setGainSending] = useState(false);
-  const [extraKazanim, setExtraKazanim] = useState(''); // ekstra kazanım input'u
+  const [sending, setSending] = useState({});
   
-  // Toplu yoklama için yeni state'ler
-  const [attendanceData, setAttendanceData] = useState({}); // { [OgrenciId]: durum }
+  const [attendanceData, setAttendanceData] = useState({});
   const [batchSending, setBatchSending] = useState(false);
+
+  const [kazanimExpanded, setKazanimExpanded] = useState(false);
+  const [kazanimData, setKazanimData] = useState([]);
+  const [kazanimLoading, setKazanimLoading] = useState(false);
+  const [kazanimError, setKazanimError] = useState(null);
+  const [selectedKazanimlar, setSelectedKazanimlar] = useState([]);
+  const [expandedBasliks, setExpandedBasliks] = useState(new Set());
+  const [kazanimSearchText, setKazanimSearchText] = useState('');
+  const [expandedTexts, setExpandedTexts] = useState(new Set());
+  const [customKazanimText, setCustomKazanimText] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -78,37 +78,6 @@ export default function AttendanceLesson() {
     })();
   }, [Sinif, Tarih, DersSaati, ProgramID]);
 
-  // Fetch select options from /api/schedule/gain using Ders & Sinif
-  useEffect(() => {
-    const fetchGain = async () => {
-      try {
-        setGainLoading(true);
-        setGainError(null);
-        const dersVal = Ders || (students[0]?.Ders);
-        const sinifVal = Sinif || (students[0]?.Sinif);
-        if (!dersVal || !sinifVal) {
-          setGainOptions([]);
-          return;
-        }
-        const res = await api.post('/schedule/gain', { Ders: String(dersVal), Sinif: String(sinifVal) });
-        const arrRaw = Array.isArray(res?.data) ? res.data : [];
-        const arr = arrRaw.slice().sort((a, b) => (Number(a?.Hafta) || 0) - (Number(b?.Hafta) || 0));
-        setGainOptions(arr);
-        setSelectedGains([]);
-      } catch (e) {
-        setGainError(e?.message || 'Seçenekler alınamadı');
-      } finally {
-        setGainLoading(false);
-      }
-    };
-    
-    // Sadece students ilk kez yüklendiğinde çağır
-    if (students.length > 0 && gainOptions.length === 0) {
-      fetchGain();
-    }
-    // Sadece Ders ve Sinif değiştiğinde tetikle, students değişikliğini ignore et
-  }, [Ders, Sinif, students.length]);
-
   // Yeni sistem: Sadece local state'i güncelle, API'ye gönderme
   const updateAttendance = useCallback((ogrenciId, durum) => {
     setAttendanceData(prev => ({
@@ -152,10 +121,12 @@ export default function AttendanceLesson() {
 
   const processBatchSend = useCallback(async () => {
     const attendanceEntries = Object.entries(attendanceData);
+    // Durum 1 olanları filtrele (gönderme)
+    const filteredEntries = attendanceEntries.filter(([ogrenciId, durum]) => durum !== 1);
     let successCount = 0;
     let errorCount = 0;
     
-    for (const [ogrenciId, durum] of attendanceEntries) {
+    for (const [ogrenciId, durum] of filteredEntries) {
       try {
         const body = {
           tarih: String(Tarih),
@@ -183,81 +154,262 @@ export default function AttendanceLesson() {
     }
   }, [attendanceData, ProgramID, Tarih, navigation]);
 
-  const sendGainData = useCallback(async () => {
-    if (selectedGains.length === 0 && !extraKazanim.trim()) {
-      Alert.alert('Uyarı', 'Lütfen en az bir kazanım seçin veya ekstra kazanım girin.');
+  const fetchKazanimlar = useCallback(async () => {
+    try {
+      setKazanimLoading(true);
+      setKazanimError(null);
+      const body = {
+        Ders: String(Ders),
+        Sinif: String(Sinif)
+      };
+      console.log('📚 Kazanım API isteği:', body);
+      const res = await api.post('/schedule/gain/new/get', body);
+      console.log('📚 Kazanım API yanıtı:', res);
+      const arr = Array.isArray(res?.data) ? res.data : [];
+      console.log('📚 Kazanım sayısı:', arr.length);
+      setKazanimData(arr.map((item, idx) => ({ ...item, id: item.id || idx })));
+    } catch (e) {
+      console.error('❌ Kazanım yükleme hatası:', e);
+      setKazanimError(e?.message || 'Kazanımlar yüklenemedi');
+    } finally {
+      setKazanimLoading(false);
+    }
+  }, [Ders, Sinif]);
+
+  useEffect(() => {
+    if (kazanimExpanded && kazanimData.length === 0) {
+      fetchKazanimlar();
+    }
+  }, [kazanimExpanded, kazanimData.length, fetchKazanimlar]);
+
+  const handleKazanimSecClick = useCallback(() => {
+    setKazanimExpanded(prev => !prev);
+  }, []);
+
+  const toggleBaslik = useCallback((id) => {
+    setExpandedBasliks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+        } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const toggleTextExpansion = useCallback((key) => {
+    setExpandedTexts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const renderTruncatedText = useCallback((text, textKey, style) => {
+    const MAX_LENGTH = 80;
+    const isExpanded = expandedTexts.has(textKey);
+    const shouldTruncate = text.length > MAX_LENGTH;
+
+    if (!shouldTruncate) {
+      return <Text style={style}>{text}</Text>;
+    }
+
+    return (
+      <View>
+        <Text style={style}>
+          {isExpanded ? text : `${text.substring(0, MAX_LENGTH)}...`}
+        </Text>
+        <TouchableOpacity onPress={() => toggleTextExpansion(textKey)}>
+          <Text style={styles.showMoreText}>
+            {isExpanded ? '▲ Daha az göster' : '▼ Devamını gör'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }, [expandedTexts, toggleTextExpansion]);
+
+  const toggleKazanimSelection = useCallback((type, value, parentId, parentBaslik, itemId) => {
+    setSelectedKazanimlar(prev => {
+      const key = type === 'baslik' ? `baslik_${itemId}_${value}` : `altbaslik_${parentId}_${itemId}_${value}`;
+      const exists = prev.some(item => item.key === key);
+      
+      if (exists) {
+        let newSelected = prev.filter(item => item.key !== key);
+        
+        if (type === 'altbaslik') {
+          const remainingAltbaslikForParent = newSelected.filter(
+            item => item.type === 'altbaslik' && item.parentId === parentId
+          );
+          
+          if (remainingAltbaslikForParent.length === 0) {
+            const parentKey = `baslik_${itemId}_${parentBaslik}`;
+            newSelected = newSelected.filter(item => item.key !== parentKey);
+          }
+        }
+        
+        return newSelected;
+      }
+      
+      if (type === 'altbaslik') {
+        const parentKey = `baslik_${itemId}_${parentBaslik}`;
+        const parentExists = prev.some(item => item.key === parentKey);
+        
+        if (!parentExists) {
+          return [...prev, 
+            { key: parentKey, type: 'baslik', value: parentBaslik, parentId: null, itemId },
+            { key, type, value, parentId, itemId }
+          ];
+        }
+      }
+      
+      return [...prev, { key, type, value, parentId, itemId }];
+    });
+  }, []);
+
+  const isKazanimSelected = useCallback((type, value, parentId, itemId) => {
+    const key = type === 'baslik' ? `baslik_${itemId}_${value}` : `altbaslik_${parentId}_${itemId}_${value}`;
+    return selectedKazanimlar.some(item => item.key === key);
+  }, [selectedKazanimlar]);
+
+  const filteredKazanimData = useMemo(() => {
+    if (!kazanimSearchText.trim()) {
+      return kazanimData;
+    }
+    
+    const searchLower = kazanimSearchText.toLowerCase().trim();
+    return kazanimData.filter(item => {
+      const baslikMatch = item.baslik?.toLowerCase().includes(searchLower);
+      const altbaslikMatch = item.altbaslik?.some(alt => 
+        alt.toLowerCase().includes(searchLower)
+      );
+      return baslikMatch || altbaslikMatch;
+    });
+  }, [kazanimData, kazanimSearchText]);
+
+  const formatSelectedKazanimlar = useCallback(() => {
+    // Grup başlıklarına göre organize et
+    const grouped = {};
+    
+    selectedKazanimlar.forEach(item => {
+      if (item.type === 'baslik') {
+        if (!grouped[item.value]) {
+          grouped[item.value] = [];
+        }
+      } else if (item.type === 'altbaslik') {
+        // Parent başlığı bul
+        const parentItem = selectedKazanimlar.find(
+          k => k.type === 'baslik' && k.key === `baslik_${item.parentId}`
+        );
+        
+        // Eğer parent yoksa, kazanım verisinden başlığı al
+        let parentKey = item.parentId || 'Diğer Kazanımlar';
+        
+        // Gerçek başlık metnini kullan (item içinde parentBaslik varsa)
+        const actualParent = kazanimData.find(k => k.id === item.parentId);
+        if (actualParent) {
+          parentKey = actualParent.baslik;
+        }
+        
+        if (!grouped[parentKey]) {
+          grouped[parentKey] = [];
+        }
+        grouped[parentKey].push(item.value);
+      }
+    });
+
+    // Formatla
+    let formattedText = '=== SEÇİLİ KAZANIMLAR ===\n\n';
+    
+    Object.keys(grouped).forEach(baslik => {
+      formattedText += `${baslik}\n`;
+      
+      if (grouped[baslik].length > 0) {
+        grouped[baslik].forEach(altbaslik => {
+          formattedText += `  - ${altbaslik}\n`;
+        });
+      }
+      
+      formattedText += '\n';
+    });
+    
+    // Özel kazanım metni varsa ekle
+    if (customKazanimText.trim()) {
+      formattedText += '=== ÖZEL KAZANIMLAR ===\n';
+      formattedText += customKazanimText.trim() + '\n\n';
+    }
+    
+    formattedText += '========================';
+    
+    return formattedText;
+  }, [selectedKazanimlar, kazanimData, customKazanimText]);
+
+  const handleKazanimKaydet = useCallback(async () => {
+    if (selectedKazanimlar.length === 0) {
+      Alert.alert('Uyarı', 'Lütfen en az bir kazanım seçin.');
       return;
     }
 
-    try {
-      setGainSending(true);
-      
-      // Seçilen kazanımları tek metinde birleştir
-      let combinedKazanim = selectedGains
-        .map(g => String(g?.kazanim || ''))
-        .filter(k => k.trim())
-        .join(', ');
+    // Formatlanmış metni oluştur ve konsola yazdır
+    const formattedKazanimlar = formatSelectedKazanimlar();
+    console.log('\n' + formattedKazanimlar + '\n');
 
-      // Eğer ekstra kazanım girilmişse, sonuna ekle
-      if (extraKazanim.trim()) {
-        if (combinedKazanim) {
-          combinedKazanim += ', ' + extraKazanim.trim();
+    try {
+      let kazanimText = selectedKazanimlar.map(item => item.value).join(', ');
+      
+      // Özel kazanım metni varsa ekle
+      if (customKazanimText.trim()) {
+        if (kazanimText) {
+          kazanimText += ', ' + customKazanimText.trim();
         } else {
-          combinedKazanim = extraKazanim.trim();
+          kazanimText = customKazanimText.trim();
         }
       }
-
+      
       const body = {
         Sinif: String(Sinif),
-        kazanim: combinedKazanim,
+        kazanim: kazanimText,
         ProgramID: Number(ProgramID)
       };
       
       await api.post('/schedule/gainadd', body);
-      
-      Alert.alert('Başarılı', 'Kazanımlar başarıyla kaydedildi.');
-      
-      // Seçimi ve input'u temizle
-      setSelectedGains([]);
-      setExtraKazanim('');
-      setGainExpanded(false);
-      
+      Alert.alert('Başarılı', 'Kazanımlar kaydedildi.');
+      setKazanimExpanded(false);
+      setSelectedKazanimlar([]);
+      setExpandedBasliks(new Set());
+      setKazanimSearchText('');
+      setCustomKazanimText('');
     } catch (e) {
       Alert.alert('Hata', e?.message || 'Kazanımlar kaydedilemedi');
-    } finally {
-      setGainSending(false);
     }
-  }, [selectedGains, extraKazanim, Sinif, ProgramID]);
+  }, [selectedKazanimlar, Sinif, ProgramID, formatSelectedKazanimlar]);
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: theme.border }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={[styles.backIcon, { color: theme.text }]}>←</Text>
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Yoklama</Text>
-          <View style={{ width: 44 }} />
-        </View>
-        
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <FeaturePageHeader 
+          title="Yoklama" 
+          onBackPress={() => navigation.goBack()}
+        />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.accent} />
           <Text style={[styles.loadingText, { color: theme.text }]}>Öğrenci listesi yükleniyor…</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: theme.border }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={[styles.backIcon, { color: theme.text }]}>←</Text>
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Yoklama</Text>
-          <View style={{ width: 44 }} />
-        </View>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <FeaturePageHeader 
+          title="Yoklama" 
+          onBackPress={() => navigation.goBack()}
+        />
         
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: theme.danger }]}>{String(error)}</Text>
@@ -265,7 +417,7 @@ export default function AttendanceLesson() {
             <Text style={[styles.retryText, { color: theme.primary }]}>Geri dön</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -336,180 +488,210 @@ export default function AttendanceLesson() {
         title="Yoklama" 
         onBackPress={() => navigation.goBack()}
       />
-
       
       
       <FlatList
         ListHeaderComponent={
-          <View style={styles.gainSectionContainer}>
-            {/* Modern Header */}
-            <View style={[styles.gainHeader, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <View style={styles.gainHeaderContent}>
-                <Text style={[styles.gainTitle, { color: theme.text }]}>Kazanım Seçimi</Text>
+          <View>
+            <View style={styles.kazanimHeaderCard}>
+              <View style={styles.kazanimHeaderContent}>
+                <View style={styles.kazanimIconContainer}>
+                  <Text style={styles.kazanimIcon}>📚</Text>
+                </View>
+                <View style={styles.kazanimHeaderText}>
+                  <Text style={styles.kazanimTitle}>Kazanımlar</Text>
+                  <Text style={styles.kazanimSubtitle}>Ders kazanımlarını seçin</Text>
+                </View>
+              </View>
                 <TouchableOpacity 
-                  style={[styles.expandButton, { backgroundColor: theme.accent }]}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    setGainExpanded(v => !v);
-                  }}
+                style={styles.kazanimSecButton}
+                onPress={handleKazanimSecClick}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.expandButtonText}>
-                    {gainExpanded ? 'Kapat' : selectedGains.length > 0 ? `${selectedGains.length} Seçili` : 'Seç'}
+                <Text style={styles.kazanimSecButtonText}>
+                  {kazanimExpanded ? 'Kapat' : 'Seç'}
                   </Text>
                 </TouchableOpacity>
-              </View>
             </View>
 
-            {/* Loading/Error States */}
-            {gainLoading && (
-              <View style={[styles.stateContainer, { backgroundColor: theme.card }]}>
-                <ActivityIndicator size="small" color={theme.accent} />
-                <Text style={[styles.stateText, { color: theme.text }]}>Yükleniyor...</Text>
+            {kazanimExpanded && (
+              <View style={[styles.kazanimExpandedContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                {kazanimLoading ? (
+                  <View style={styles.kazanimLoadingContainer}>
+                    <ActivityIndicator size="large" color="#0D1B2A" />
+                    <Text style={styles.kazanimLoadingText}>Yükleniyor...</Text>
               </View>
-            )}
-
-            {gainError && (
-              <View style={[styles.stateContainer, { backgroundColor: theme.card }]}>
-                <Text style={[styles.errorText, { color: theme.danger }]}>Hata: {String(gainError)}</Text>
-              </View>
-            )}
-
-            {/* Dropdown List with Smart Layout */}
-            {gainExpanded && !gainLoading && !gainError && (
-              <View style={[styles.gainDropdown, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                {/* Quick Actions Bar */}
-                <View style={[styles.quickActionsBar, { borderBottomColor: theme.border }]}>
+                ) : kazanimError ? (
+                  <View style={styles.kazanimErrorContainer}>
+                    <Text style={styles.kazanimErrorText}>{kazanimError}</Text>
                   <TouchableOpacity 
-                    style={[styles.quickActionButton, { backgroundColor: theme.accent + '15' }]}
-                    onPress={() => setSelectedGains([...gainOptions])}
-                    activeOpacity={0.7}
+                      style={styles.kazanimRetryButton}
+                      onPress={fetchKazanimlar}
                   >
-                    <Text style={[styles.quickActionText, { color: theme.accent }]}>Tümünü Seç</Text>
+                      <Text style={styles.kazanimRetryText}>Tekrar Dene</Text>
                   </TouchableOpacity>
+                  </View>
+                  ) : kazanimData.length === 0 && !kazanimLoading && !kazanimError ? (
+                    <View style={styles.kazanimNoResults}>
+                      <Text style={styles.kazanimNoResultsText}>
+                        Bu ders için henüz kazanım tanımlanmamış.
+                      </Text>
+                    </View>
+                  ) : kazanimData.length > 0 ? (
+                  <View>
+                    <View style={styles.kazanimSearchContainer}>
+                      <TextInput
+                        style={[styles.kazanimSearchInput, { 
+                          backgroundColor: theme.background,
+                          borderColor: theme.border,
+                          color: theme.text
+                        }]}
+                        placeholder="Kazanım ara..."
+                        placeholderTextColor="#9CA3AF"
+                        value={kazanimSearchText}
+                        onChangeText={setKazanimSearchText}
+                      />
+                      {kazanimSearchText.length > 0 && (
                   <TouchableOpacity 
-                    style={[styles.quickActionButton, { backgroundColor: theme.surface }]}
-                    onPress={() => setSelectedGains([])}
-                    activeOpacity={0.7}
+                          style={styles.kazanimSearchClear}
+                          onPress={() => setKazanimSearchText('')}
                   >
-                    <Text style={[styles.quickActionText, { color: theme.text }]}>Temizle</Text>
+                          <Text style={styles.kazanimSearchClearText}>✕</Text>
                   </TouchableOpacity>
+                      )}
                 </View>
 
-                {/* Compact Grid View */}
-                <ScrollView 
-                  style={styles.gainScrollView} 
-                  showsVerticalScrollIndicator={true}
-                  scrollEnabled={true}
-                  nestedScrollEnabled={true}
-                >
-                  <View style={styles.gainGrid}>
-                    {gainOptions.map((opt, idx) => {
-                      const key = `${String(opt?.Hafta)}-${String(opt?.kazanim)}`;
-                      const isSelected = selectedGains.some(g => String(g?.Hafta) === String(opt?.Hafta) && String(g?.kazanim) === String(opt?.kazanim));
+                    {filteredKazanimData.length === 0 ? (
+                      <View style={styles.kazanimNoResults}>
+                        <Text style={styles.kazanimNoResultsText}>Sonuç bulunamadı</Text>
+              </View>
+                    ) : (
+                      <ScrollView style={styles.kazanimListScroll} showsVerticalScrollIndicator={false}>
+                        {filteredKazanimData.map((item) => {
+                          const hasAltbaslik = item.altbaslik && Array.isArray(item.altbaslik) && item.altbaslik.length > 0;
+                        
                       return (
+                          <View key={item.id} style={styles.kazanimItem}>
+                            {!hasAltbaslik ? (
+                              <View style={styles.kazanimBaslikRow}>
                         <TouchableOpacity
-                          key={key}
-                          style={[
-                            styles.gainGridItem, 
-                            { 
-                              borderColor: isSelected ? theme.accent : theme.border,
-                              backgroundColor: isSelected ? theme.accent + '10' : theme.card
-                            }
-                          ]}
-                          activeOpacity={0.6}
-                          onPress={() => {
-                            setSelectedGains(prev => {
-                              const exists = prev.some(g => String(g?.Hafta) === String(opt?.Hafta) && String(g?.kazanim) === String(opt?.kazanim));
-                              if (exists) {
-                                return prev.filter(g => !(String(g?.Hafta) === String(opt?.Hafta) && String(g?.kazanim) === String(opt?.kazanim)));
-                              }
-                              return [...prev, opt];
-                            });
-                          }}
-                        >
-                          <View style={styles.gainGridHeader}>
-                            <View style={[styles.compactWeekBadge, { backgroundColor: theme.accent }]}>
-                              <Text style={styles.compactWeekText}>H{String(opt?.Hafta ?? '')}</Text>
+                                  style={styles.checkboxContainer}
+                                  onPress={() => toggleKazanimSelection('baslik', item.baslik, null, null, item.id)}
+                                  activeOpacity={0.7}
+                                >
+                                  <View style={[
+                                    styles.checkbox,
+                                    isKazanimSelected('baslik', item.baslik, null, item.id) && styles.checkboxSelected
+                                  ]}>
+                                    {isKazanimSelected('baslik', item.baslik, null, item.id) && (
+                                      <Text style={styles.checkboxCheck}>✓</Text>
+                                    )}
                             </View>
-                            {isSelected && (
-                              <View style={[styles.compactCheckIcon, { backgroundColor: theme.accent }]}>
-                                <Text style={styles.compactCheck}>✓</Text>
+                                </TouchableOpacity>
+                                
+                                  <View style={styles.kazanimBaslikTextContainer}>
+                                    {renderTruncatedText(item.baslik, `baslik_${item.id}`, styles.kazanimBaslikText)}
                               </View>
+                              </View>
+                            ) : (
+                              <>
+                                <View style={styles.kazanimBaslikRow}>
+                  <TouchableOpacity 
+                                    style={styles.checkboxContainer}
+                                    onPress={() => toggleBaslik(item.id)}
+                    activeOpacity={0.7}
+                  >
+                                    <View style={[
+                                      styles.checkbox,
+                                      styles.checkboxDisabled,
+                                      isKazanimSelected('baslik', item.baslik, null, item.id) && styles.checkboxSelected
+                                    ]}>
+                                      {isKazanimSelected('baslik', item.baslik, null, item.id) && (
+                                        <Text style={styles.checkboxCheck}>✓</Text>
                             )}
                           </View>
-                          <Text style={[styles.compactGainText, { color: theme.text }]} numberOfLines={3}>
-                            {String(opt?.kazanim ?? '')}
-                          </Text>
-                        </TouchableOpacity>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                                    style={styles.kazanimBaslikTextContainer}
+                                    onPress={() => toggleBaslik(item.id)}
+                    activeOpacity={0.7}
+                  >
+                                    {renderTruncatedText(item.baslik, `baslik_${item.id}`, [styles.kazanimBaslikText, styles.kazanimBaslikWithAlt])}
+                                  </TouchableOpacity>
+                                  
+                                  <TouchableOpacity onPress={() => toggleBaslik(item.id)} style={styles.expandIconContainer}>
+                                    <Text style={styles.expandIcon}>
+                                      {expandedBasliks.has(item.id) ? '−' : '+'}
+                                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                                {expandedBasliks.has(item.id) && (
+                                  <View style={styles.altbaslikContainer}>
+                                    {item.altbaslik.map((alt, idx) => (
+                        <TouchableOpacity
+                                        key={`${item.id}-${idx}`}
+                                        style={styles.altbaslikRow}
+                                        onPress={() => toggleKazanimSelection('altbaslik', alt, item.id, item.baslik, item.id)}
+                                        activeOpacity={0.7}
+                                      >
+                                        <View style={[
+                                          styles.checkbox,
+                                          styles.checkboxAlt,
+                                          isKazanimSelected('altbaslik', alt, item.id, item.id) && styles.checkboxSelected
+                                        ]}>
+                                          {isKazanimSelected('altbaslik', alt, item.id, item.id) && (
+                                            <Text style={styles.checkboxCheck}>✓</Text>
+                                          )}
+                            </View>
+                                        <View style={styles.altbaslikTextWrapper}>
+                                          {renderTruncatedText(alt, `altbaslik_${item.id}_${idx}`, styles.altbaslikText)}
+                                        </View>
+                                      </TouchableOpacity>
+                                    ))}
+                              </View>
+            )}
+                              </>
+                            )}
+                          </View>
                       );
                     })}
-                  </View>
                 </ScrollView>
+                    )}
 
-                {/* Selection Counter */}
-                <View style={[styles.selectionCounter, { borderTopColor: theme.border, backgroundColor: theme.surface }]}>
-                  <Text style={[styles.counterText, { color: theme.text }]}>
-                    {selectedGains.length} / {gainOptions.length} kazanım seçildi
-                  </Text>
-                </View>
-              </View>
-            )}
+                    {/* Özel Kazanım Input */}
+                    <View style={styles.customKazanimContainer}>
+                      <Text style={styles.customKazanimLabel}>📝 Kazanım Ekle:</Text>
+                      <TextInput
+                        style={[styles.customKazanimInput, { 
+                          backgroundColor: theme.background,
+                          borderColor: theme.border,
+                          color: theme.text
+                        }]}
+                        placeholder="Özel kazanım yazın..."
+                        placeholderTextColor="#9CA3AF"
+                        value={customKazanimText}
+                        onChangeText={setCustomKazanimText}
+                        multiline
+                        numberOfLines={3}
+                      />
+                    </View>
 
-            {/* Selected Items Summary */}
-            {selectedGains.length > 0 && (
-              <View style={[styles.selectedSummary, { backgroundColor: theme.accent + '10', borderColor: theme.accent }]}>
-                <Text style={[styles.summaryText, { color: theme.text }]}>
-                  {selectedGains.length} kazanım seçildi
-                </Text>
+                    {(selectedKazanimlar.length > 0 || customKazanimText.trim()) && (
+                      <View style={styles.kazanimFooter}>
                 <TouchableOpacity 
-                  style={[styles.clearButton, { borderColor: theme.accent }]}
-                  onPress={() => setSelectedGains([])}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.clearButtonText, { color: theme.accent }]}>Temizle</Text>
+                          style={styles.kazanimSaveButton}
+                          onPress={handleKazanimKaydet}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.kazanimSaveButtonText}>Kazanımları Kaydet</Text>
                 </TouchableOpacity>
               </View>
             )}
-
-            {/* Ekstra Kazanım Input'u */}
-            <View style={[styles.extraKazanimContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={[styles.extraKazanimLabel, { color: theme.text }]}>
-                Ekstra Kazanım (Opsiyonel)
-              </Text>
-              <TextInput
-                style={[
-                  styles.extraKazanimInput,
-                  {
-                    backgroundColor: theme.background,
-                    borderColor: theme.border,
-                    color: theme.text,
-                  }
-                ]}
-                value={extraKazanim}
-                onChangeText={setExtraKazanim}
-                placeholder="Ekstra kazanım yazabilirsiniz..."
-                placeholderTextColor="#9CA3AF"
-                multiline={true}
-                numberOfLines={2}
-                textAlignVertical="top"
-              />
             </View>
-
-            {/* Kazanım Gönder Butonu */}
-            {(selectedGains.length > 0 || extraKazanim.trim()) && (
-              <TouchableOpacity 
-                style={[styles.sendGainButton, { backgroundColor: theme.accent }]}
-                onPress={sendGainData}
-                activeOpacity={0.8}
-                disabled={gainSending}
-              >
-                {gainSending ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.sendGainButtonText}>Kazanımları Kaydet</Text>
-                )}
-              </TouchableOpacity>
+                ) : null}
+              </View>
             )}
           </View>
         }
@@ -574,7 +756,6 @@ export default function AttendanceLesson() {
           </View>
         }
         contentContainerStyle={styles.listContainer}
-
       />
     </View>
   );
@@ -702,202 +883,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     opacity: 0.7,
   },
-  // New Modern Gain Section Styles
-  gainSectionContainer: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  gainHeader: {
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  gainHeaderContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-  },
-  gainTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  expandButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  expandButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  stateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    marginTop: 8,
-    borderRadius: 12,
-    gap: 8,
-  },
-  stateText: {
-    fontSize: 14,
-  },
-  errorText: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  gainDropdown: {
-    marginTop: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  gainScrollView: {
-    maxHeight: 280,
-    flex: 0,
-  },
-  quickActionsBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    gap: 12,
-  },
-  quickActionButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  quickActionText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  gainGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 8,
-    gap: 8,
-    paddingBottom: 20,
-  },
-  gainGridItem: {
-    width: '48%',
-    minHeight: 95,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
-    justifyContent: 'space-between',
-  },
-  gainGridHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  compactWeekBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  compactWeekText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  compactCheckIcon: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  compactCheck: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  compactGainText: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: '500',
-  },
-  selectionCounter: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    alignItems: 'center',
-  },
-  counterText: {
-    fontSize: 12,
-    fontWeight: '500',
-    opacity: 0.8,
-  },
-  selectedSummary: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    marginTop: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  summaryText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  clearButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  clearButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  sendGainButton: {
-    marginTop: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-  },
-  sendGainButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  extraKazanimContainer: {
-    marginTop: 12,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  extraKazanimLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  extraKazanimInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    minHeight: 60,
-    maxHeight: 100,
-  },
   
-  // Yeni stiller - Footer ve Yoklama Özeti
+  // Footer ve Yoklama Özeti
   footerContainer: {
     padding: 16,
     paddingBottom: 32,
@@ -933,5 +920,313 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  
+  kazanimHeaderCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  kazanimHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  kazanimIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#FFF9E6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  kazanimIcon: {
+    fontSize: 24,
+  },
+  kazanimHeaderText: {
+    flex: 1,
+  },
+  kazanimTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#0D1B2A',
+    marginBottom: 2,
+  },
+  kazanimSubtitle: {
+    fontSize: 13,
+    color: '#6b7280',
+  },
+  kazanimSecButton: {
+    backgroundColor: '#FFD60A',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    shadowColor: '#FFD60A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  kazanimSecButtonText: {
+    color: '#0D1B2A',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  kazanimExpandedContainer: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  kazanimSearchContainer: {
+    padding: 16,
+    backgroundColor: '#ffffff',
+    position: 'relative',
+  },
+  kazanimSearchInput: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 15,
+    paddingRight: 44,
+    color: '#1f2937',
+  },
+  kazanimListScroll: {
+    maxHeight: 350,
+  },
+  kazanimSearchClear: {
+    position: 'absolute',
+    right: 20,
+    top: '50%',
+    marginTop: -12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#d1d5db',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  kazanimSearchClearText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  kazanimNoResults: {
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kazanimNoResultsText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    fontStyle: 'italic',
+  },
+  kazanimLoadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kazanimLoadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  kazanimErrorContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kazanimErrorText: {
+    fontSize: 14,
+    color: '#ef4444',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  kazanimRetryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#0D1B2A',
+    borderRadius: 8,
+  },
+  kazanimRetryText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  kazanimItem: {
+    marginHorizontal: 12,
+    marginVertical: 6,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  kazanimBaslikRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+  },
+  checkboxContainer: {
+    marginRight: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 7,
+    borderWidth: 2.5,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxDisabled: {
+    opacity: 0.4,
+    borderColor: '#cbd5e1',
+  },
+  checkboxSelected: {
+    backgroundColor: '#FFD60A',
+    borderColor: '#FFD60A',
+  },
+  checkboxCheck: {
+    color: '#0D1B2A',
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  checkboxAlt: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+  },
+  kazanimBaslikTextContainer: {
+    flex: 1,
+  },
+  kazanimBaslikText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1f2937',
+  },
+  kazanimBaslikWithAlt: {
+    fontWeight: '600',
+    color: '#0D1B2A',
+  },
+  expandIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFD60A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  expandIcon: {
+    fontSize: 18,
+    color: '#0D1B2A',
+    fontWeight: '700',
+  },
+  altbaslikContainer: {
+    backgroundColor: '#f8f9fa',
+    paddingLeft: 16,
+    paddingRight: 8,
+    paddingBottom: 8,
+  },
+  altbaslikRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 12,
+    marginTop: 6,
+  },
+  altbaslikTextWrapper: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  altbaslikText: {
+    fontSize: 14,
+    color: '#4b5563',
+  },
+  showMoreText: {
+    fontSize: 12,
+    color: '#E5C409',
+    marginTop: 4,
+    fontWeight: '500',
+    opacity: 0.7,
+  },
+  kazanimFooter: {
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderTopWidth: 0,
+  },
+  selectedCountText: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+    flex: 1,
+    opacity: 0.8,
+  },
+  kazanimSaveButton: {
+    backgroundColor: '#FFD60A',
+    paddingHorizontal: 40,
+    paddingVertical: 14,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+    minWidth: 200,
+  },
+  kazanimSaveButtonText: {
+    color: '#000000',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  customKazanimContainer: {
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  customKazanimLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  customKazanimInput: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#1f2937',
+    textAlignVertical: 'top',
+    minHeight: 80,
+  },
 });

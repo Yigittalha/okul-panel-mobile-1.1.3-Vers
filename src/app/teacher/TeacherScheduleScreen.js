@@ -142,7 +142,7 @@ export default function TeacherScheduleScreen() {
               const saat = lesson.DersSaati || lesson.Saat || lesson.saat || "";
               const ders = lesson.Ders || lesson.ders || lesson.DersAdi || "";
               const sinif = lesson.Sinif || lesson.sinif || lesson.SinifAdi || "";
-              const ogretmen = lesson.Ogretmen || lesson.ogretmen || lesson.OgretmenAdi || "";
+              const ogretmen = lesson.AdSoyad || lesson.ogretmen || lesson.OgretmenAdi || "";
               
               return (
                 <View key={index} style={[styles.lessonCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
