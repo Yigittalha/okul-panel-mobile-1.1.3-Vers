@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, SectionList, ActivityIndicator, TouchableOpacity, StyleSheet, Platform, StatusBar as RNStatusBar } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import api, { fetchUserInfo } from '../../lib/api';
 import { useTheme } from '../../state/theme';
@@ -19,6 +19,13 @@ export default function TeacherSchedule() {
   useEffect(() => {
     fetchTeacherSchedule();
   }, []);
+
+  // Sayfa her focus olduğunda veriyi yenile
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchTeacherSchedule();
+    }, [])
+  );
 
   const fetchTeacherSchedule = async () => {
     try {
@@ -129,43 +136,76 @@ export default function TeacherSchedule() {
         contentContainerStyle={{ paddingBottom: 80 }}
         keyExtractor={(item) => String(item.ProgramID)}
 
-        renderItem={({ item, index }) => (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Attendance', {
-              Sinif: item.Sinif,
-              DersSaati: item.DersSaati,
-              ProgramID: String(item.ProgramID),
-              Gun: item.Gun,
-              Ders: item.Ders,
-              Tarih: new Date().toISOString().split('T')[0]
-            })}
-            style={[styles.scheduleCard, {
+        renderItem={({ item, index }) => {
+          // Durum kontrolü
+          const getCardStyle = () => {
+            if (item.durum === 1 || item.durum === 2) {
+              return {
+                backgroundColor: '#D1FAE5', // Yeşil arka plan
+                borderLeftColor: '#10B981' // Yeşil sol kenar
+              };
+            }
+            return {
               backgroundColor: theme.card || '#fff',
               borderLeftColor: theme.accent || '#4F46E5'
-            }]}
-            activeOpacity={0.7}
-          >
-            <View style={styles.cardContent}>
-              <View style={styles.lessonHeader}>
-                <Text style={[styles.lessonTitle, { color: theme.text || '#1F2937' }]}>
-                  {item.Ders}
-                </Text>
-                <Text style={[styles.lessonTime, { color: theme.accent || '#4F46E5' }]}>
-                  {item.DersSaati}
-                </Text>
+            };
+          };
+
+          const getTimeColor = () => {
+            if (item.durum === 1 || item.durum === 2) {
+              return '#059669'; // Yeşil renk
+            }
+            return theme.accent || '#4F46E5'; // Varsayılan renk
+          };
+
+          const getStatusMessage = () => {
+            if (item.durum === 2) {
+              return (
+                <View style={styles.statusWarning}>
+                  <Text style={styles.statusWarningText}>⚠️ Kazanım eklenmedi</Text>
+                </View>
+              );
+            }
+            return null;
+          };
+
+          return (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Attendance', {
+                Sinif: item.Sinif,
+                DersSaati: item.DersSaati,
+                ProgramID: String(item.ProgramID),
+                Gun: item.Gun,
+                Ders: item.Ders,
+                Tarih: new Date().toISOString().split('T')[0]
+              })}
+              style={[styles.scheduleCard, getCardStyle()]}
+              activeOpacity={0.7}
+            >
+              <View style={styles.cardContent}>
+                <View style={styles.lessonHeader}>
+                  <Text style={[styles.lessonTitle, { color: theme.text || '#1F2937' }]}>
+                    {item.Ders}
+                  </Text>
+                  <Text style={[styles.lessonTime, { color: getTimeColor() }]}>
+                    {item.DersSaati}
+                  </Text>
+                </View>
+                
+                <View style={styles.lessonDetails}>
+                  <Text style={[styles.classInfo, { color: theme.textSecondary || '#6B7280' }]}>
+                    📍 {item.Sinif}
+                  </Text>
+                  <Text style={[styles.teacherInfo, { color: theme.textSecondary || '#6B7280' }]}>
+                    👨‍🏫 {item.Ogretmen}
+                  </Text>
+                </View>
+
+                {getStatusMessage()}
               </View>
-              
-              <View style={styles.lessonDetails}>
-                <Text style={[styles.classInfo, { color: theme.textSecondary || '#6B7280' }]}>
-                  📍 {item.Sinif}
-                </Text>
-                <Text style={[styles.teacherInfo, { color: theme.textSecondary || '#6B7280' }]}>
-                  👨‍🏫 {item.Ogretmen}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        )}
+            </TouchableOpacity>
+          );
+        }}
         ListEmptyComponent={
           <View style={{ padding: 16 }}>
             <Text style={{ color: theme.text }}>Bu öğretmen için ders bulunamadı.</Text>
@@ -310,5 +350,17 @@ const styles = StyleSheet.create({
   teacherInfo: {
     fontSize: 14,
     fontWeight: '400',
+  },
+  statusWarning: {
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: 'transparent',
+  },
+  statusWarningText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#D97706',
+    fontStyle: 'italic',
   },
 });

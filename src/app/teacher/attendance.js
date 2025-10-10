@@ -33,6 +33,12 @@ export default function AttendanceLesson() {
   const [kazanimSearchText, setKazanimSearchText] = useState('');
   const [expandedTexts, setExpandedTexts] = useState(new Set());
   const [customKazanimText, setCustomKazanimText] = useState('');
+  
+  // Kayıtlı kazanım state'leri
+  const [registeredKazanim, setRegisteredKazanim] = useState(null);
+  const [registeredKazanimLoading, setRegisteredKazanimLoading] = useState(false);
+  const [kazanimTextExpanded, setKazanimTextExpanded] = useState(false);
+  const [kazanimTextHeight, setKazanimTextHeight] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -59,6 +65,9 @@ export default function AttendanceLesson() {
         const arr = Array.isArray(res?.data) ? res.data : [];
         setStudents(arr);
         
+        // Kayıtlı kazanım verisini çek
+        await fetchRegisteredKazanim();
+        
         // Mevcut kayıtları attendanceData'ya aktar ve null olanları "Burada" (1) yap
         const initialAttendance = {};
         arr.forEach(student => {
@@ -77,6 +86,35 @@ export default function AttendanceLesson() {
       }
     })();
   }, [Sinif, Tarih, DersSaati, ProgramID]);
+
+  // Kayıtlı kazanım verisini çek
+  const fetchRegisteredKazanim = useCallback(async () => {
+    try {
+      setRegisteredKazanimLoading(true);
+      console.log('📚 Kayıtlı kazanım verisi çekiliyor...');
+      
+      const body = {
+        ProgramID: Number(ProgramID),
+        tarih: String(Tarih)
+      };
+      
+      const response = await api.post('/schedule/gain/registered/get', body);
+      console.log('📚 Kayıtlı kazanım yanıtı:', response.data);
+      
+      if (response.data && response.data.kazanim && response.data.kazanim.trim()) {
+        setRegisteredKazanim(response.data.kazanim.trim());
+        console.log('✅ Kayıtlı kazanım başarıyla yüklendi');
+      } else {
+        setRegisteredKazanim(null);
+        console.log('ℹ️ Kayıtlı kazanım bulunamadı');
+      }
+    } catch (error) {
+      console.error('❌ Kayıtlı kazanım alınamadı:', error);
+      setRegisteredKazanim(null);
+    } finally {
+      setRegisteredKazanimLoading(false);
+    }
+  }, [ProgramID, Tarih]);
 
   // Yeni sistem: Sadece local state'i güncelle, API'ye gönderme
   const updateAttendance = useCallback((ogrenciId, durum) => {
@@ -383,10 +421,13 @@ export default function AttendanceLesson() {
       setExpandedBasliks(new Set());
       setKazanimSearchText('');
       setCustomKazanimText('');
+      
+      // Kayıtlı kazanım verisini güncelle
+      await fetchRegisteredKazanim();
     } catch (e) {
       Alert.alert('Hata', e?.message || 'Kazanımlar kaydedilemedi');
     }
-  }, [selectedKazanimlar, Sinif, ProgramID, formatSelectedKazanimlar]);
+  }, [selectedKazanimlar, Sinif, ProgramID, formatSelectedKazanimlar, fetchRegisteredKazanim]);
 
   if (loading) {
     return (
@@ -493,6 +534,51 @@ export default function AttendanceLesson() {
       <FlatList
         ListHeaderComponent={
           <View>
+            {/* Kayıtlı Kazanım Bölümü */}
+            {registeredKazanim && (
+              <View style={[styles.registeredKazanimCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <View style={styles.registeredKazanimHeader}>
+                  <Text style={[styles.registeredKazanimIcon, { color: theme.accent }]}>📋</Text>
+                  <Text style={[styles.registeredKazanimTitle, { color: theme.text }]}>Kayıtlı Kazanım</Text>
+                </View>
+                
+                {registeredKazanimLoading ? (
+                  <View style={styles.registeredKazanimLoading}>
+                    <ActivityIndicator size="small" color={theme.accent} />
+                    <Text style={[styles.registeredKazanimLoadingText, { color: theme.textSecondary }]}>
+                      Yükleniyor...
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.registeredKazanimContent}>
+                    <Text 
+                      style={[styles.registeredKazanimText, { color: theme.text }]}
+                      numberOfLines={kazanimTextExpanded ? undefined : 3}
+                      onLayout={(event) => {
+                        const { height } = event.nativeEvent.layout;
+                        setKazanimTextHeight(height);
+                      }}
+                    >
+                      {registeredKazanim}
+                    </Text>
+                    
+                    {/* Metin gerçekten uzunsa butonu göster */}
+                    {registeredKazanim.length > 150 && (
+                      <TouchableOpacity
+                        style={styles.registeredKazanimToggle}
+                        onPress={() => setKazanimTextExpanded(!kazanimTextExpanded)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.registeredKazanimToggleText, { color: theme.accent }]}>
+                          {kazanimTextExpanded ? 'Daha az göster' : 'Daha fazla göster'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+              </View>
+            )}
+
             <View style={styles.kazanimHeaderCard}>
               <View style={styles.kazanimHeaderContent}>
                 <View style={styles.kazanimIconContainer}>
@@ -765,6 +851,57 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
+  },
+  registeredKazanimCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  registeredKazanimHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  registeredKazanimIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  registeredKazanimTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  registeredKazanimLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  registeredKazanimLoadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+  },
+  registeredKazanimContent: {
+    flex: 1,
+  },
+  registeredKazanimText: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'left',
+  },
+  registeredKazanimToggle: {
+    marginTop: 8,
+    paddingVertical: 4,
+  },
+  registeredKazanimToggleText: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'right',
   },
   header: {
     flexDirection: 'row',
