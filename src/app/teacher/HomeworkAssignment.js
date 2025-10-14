@@ -46,7 +46,7 @@ const HomeworkAssignment = () => {
     OgretmenID: null,
   });
 
-  const [photo, setPhoto] = useState(null);
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [teacherId, setTeacherId] = useState(null);
   
@@ -132,29 +132,53 @@ const HomeworkAssignment = () => {
     }
   };
 
-  // File picker function (Photo + PDF)
+  // File picker function (Multiple Photos + PDFs)
   const pickFile = async () => {
+    // Maksimum 4 dosya kontrolü
+    if (images.length >= 4) {
+      Alert.alert("Uyarı", "Maksimum 4 dosya seçebilirsiniz.");
+      return;
+    }
+
     Alert.alert(
       "Dosya Seç",
       "Hangi tür dosya seçmek istiyorsunuz?",
       [
         {
-          text: "Fotoğraf Seç",
+          text: "Fotoğraflar Seç",
           onPress: async () => {
             try {
               const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [4, 3],
+                allowsMultipleSelection: true,
+                selectionLimit: 4 - images.length, // Kalan slot sayısı
                 quality: 0.8,
               });
 
-              if (!result.canceled) {
-                setPhoto(result.assets[0]);
+              if (!result.canceled && result.assets) {
+                const availableSlots = 4 - images.length;
+                const assetsToAdd = result.assets.slice(0, availableSlots);
+                
+                if (assetsToAdd.length < result.assets.length) {
+                  Alert.alert(
+                    "Uyarı", 
+                    `Maksimum 4 dosya seçebilirsiniz. ${assetsToAdd.length} fotoğraf eklendi, ${result.assets.length - assetsToAdd.length} fotoğraf atlandı.`
+                  );
+                }
+                
+                const newImages = assetsToAdd.map(asset => ({
+                  uri: asset.uri,
+                  name: asset.fileName || `photo_${Date.now()}.jpg`,
+                  type: asset.type || 'image/jpeg',
+                  size: asset.fileSize
+                }));
+                
+                setImages(prev => [...prev, ...newImages]);
+                Alert.alert("Başarılı", `${assetsToAdd.length} fotoğraf seçildi!`);
               }
             } catch (error) {
               console.log("❌ Image picker error:", error);
-              Alert.alert("Hata", "Fotoğraf seçilirken bir hata oluştu.");
+              Alert.alert("Hata", "Fotoğraflar seçilirken bir hata oluştu.");
             }
           }
         },
@@ -164,22 +188,33 @@ const HomeworkAssignment = () => {
             try {
               const result = await DocumentPicker.pick({
                 type: [DocumentPicker.types.pdf],
+                allowMultiSelection: true,
+                // DocumentPicker'da selectionLimit yok, manuel kontrol yapacağız
               });
 
               if (result && result.length > 0) {
-                const file = result[0];
-                // PDF'yi photo state'inde saklayıp backend'e aynı isimle gönderiyoruz
-                setPhoto({
+                const availableSlots = 4 - images.length;
+                const filesToAdd = result.slice(0, availableSlots);
+                
+                if (filesToAdd.length < result.length) {
+                  Alert.alert(
+                    "Uyarı", 
+                    `Maksimum 4 dosya seçebilirsiniz. ${filesToAdd.length} dosya eklendi, ${result.length - filesToAdd.length} dosya atlandı.`
+                  );
+                }
+                
+                const newFiles = filesToAdd.map(file => ({
                   uri: file.uri,
                   name: file.name,
                   type: 'application/pdf',
                   size: file.size
-                });
-                Alert.alert("Başarılı", `PDF dosyası seçildi: ${file.name}`);
+                }));
+                
+                setImages(prev => [...prev, ...newFiles]);
+                Alert.alert("Başarılı", `${filesToAdd.length} PDF dosyası seçildi!`);
               }
             } catch (error) {
               if (DocumentPicker.isCancel(error)) {
-                // Kullanıcı iptal etti
                 return;
               }
               console.log("PDF seçme hatası:", error);
@@ -196,8 +231,13 @@ const HomeworkAssignment = () => {
   };
 
   // Remove file
-  const removePhoto = () => {
-    setPhoto(null);
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Remove all files
+  const removeAllImages = () => {
+    setImages([]);
   };
 
   // Handle form input changes
@@ -342,14 +382,16 @@ const HomeworkAssignment = () => {
         }
       });
 
-      // Add file if selected (photo or PDF)
-      if (photo) {
-        const fileToSend = {
-          uri: photo.uri,
-          type: photo.type || "image/jpeg",
-          name: photo.name || "homework_photo.jpg",
-        };
-        formDataToSend.append("photo", fileToSend);
+      // Add files if selected (multiple images/PDFs)
+      if (images && images.length > 0) {
+        images.forEach((image, index) => {
+          const fileToSend = {
+            uri: image.uri,
+            type: image.type || "image/jpeg",
+            name: image.name || `homework_file_${index}.jpg`,
+          };
+          formDataToSend.append("images", fileToSend);
+        });
       }
 
       // TODO: remove before prod
@@ -665,39 +707,89 @@ const HomeworkAssignment = () => {
         {/* File Section */}
         <View style={[styles.formCard, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            Fotoğraf veya PDF Ekle (İsteğe Bağlı)
+            📷 Fotoğraf veya PDF Ekle
+          </Text>
+          <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>
+            İsteğe Bağlı - Maksimum 4 dosya
           </Text>
 
-          {photo ? (
-            <View style={styles.photoContainer}>
-              {photo.type === 'application/pdf' ? (
-                // PDF preview
-                <View style={styles.pdfPreview}>
-                  <Text style={[styles.pdfIcon, { color: theme.accent }]}>📄</Text>
-                  <Text style={[styles.pdfName, { color: theme.text }]} numberOfLines={2}>
-                    {photo.name}
-                  </Text>
-                  {photo.size && (
-                    <Text style={[styles.pdfSize, { color: theme.muted }]}>
-                      {(photo.size / 1024 / 1024).toFixed(2)} MB
-                    </Text>
-                  )}
-                </View>
-              ) : (
-                // Photo preview
-                <Image source={{ uri: photo.uri }} style={styles.photoPreview} />
-              )}
-              <TouchableOpacity
-                style={[
-                  styles.removePhotoButton,
-                  { backgroundColor: theme.danger },
-                ]}
-                onPress={removePhoto}
-              >
-                <Text style={[styles.removePhotoText, { color: "#fff" }]}>
-                  ❌ Dosyayı Kaldır
+          {images.length > 0 ? (
+            <View style={styles.imagesContainer}>
+              {/* Seçilen dosya sayısı */}
+              <View style={styles.filesHeader}>
+                <Text style={[styles.filesCount, { color: theme.text }]}>
+                  {images.length} dosya seçildi
                 </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.removeAllButton, { backgroundColor: theme.danger }]}
+                  onPress={removeAllImages}
+                >
+                  <Text style={[styles.removeAllText, { color: "#fff" }]}>
+                    Tümünü Kaldır
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Dosya listesi */}
+              <FlatList
+                data={images}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item, index) => `${item.uri}_${index}`}
+                renderItem={({ item, index }) => (
+                  <View style={styles.imageItem}>
+                    {item.type === 'application/pdf' ? (
+                      // PDF preview
+                      <View style={styles.pdfPreview}>
+                        <Text style={[styles.pdfIcon, { color: theme.accent }]}>📄</Text>
+                        <Text style={[styles.pdfName, { color: theme.text }]} numberOfLines={2}>
+                          {item.name}
+                        </Text>
+                        {item.size && (
+                          <Text style={[styles.pdfSize, { color: theme.muted }]}>
+                            {(item.size / 1024 / 1024).toFixed(2)} MB
+                          </Text>
+                        )}
+                      </View>
+                    ) : (
+                      // Photo preview
+                      <Image source={{ uri: item.uri }} style={styles.photoPreview} />
+                    )}
+                    <TouchableOpacity
+                      style={[styles.removeImageButton, { backgroundColor: theme.danger }]}
+                      onPress={() => removeImage(index)}
+                    >
+                      <Text style={[styles.removeImageText, { color: "#fff" }]}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              />
+
+              {/* Daha fazla dosya ekleme butonu */}
+              {images.length < 4 && (
+                <TouchableOpacity
+                  style={[
+                    styles.addMoreButton,
+                    {
+                      backgroundColor: theme.background === "#f5f5f5" ? "#fff" : theme.surface,
+                      borderColor: theme.accent,
+                    },
+                  ]}
+                  onPress={pickFile}
+                >
+                  <Text style={[styles.addMoreText, { color: theme.accent }]}>
+                    ➕ Daha Fazla Ekle ({4 - images.length} kaldı)
+                  </Text>
+                </TouchableOpacity>
+              )}
+              
+              {images.length >= 4 && (
+                <View style={[styles.maxFilesReached, { backgroundColor: theme.muted + "20" }]}>
+                  <Text style={[styles.maxFilesText, { color: theme.muted }]}>
+                    📁 Maksimum 4 dosya seçildi
+                  </Text>
+                </View>
+              )}
             </View>
           ) : (
             <TouchableOpacity
@@ -901,7 +993,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontWeight: "500",
     marginBottom: 16,
+    opacity: 0.7,
   },
   inputGroup: {
     marginBottom: 16,
@@ -998,6 +1096,70 @@ const styles = StyleSheet.create({
   removePhotoText: {
     fontSize: 14,
     fontWeight: "600",
+  },
+  imagesContainer: {
+    marginTop: 12,
+  },
+  filesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  filesCount: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  removeAllButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  removeAllText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  imageItem: {
+    marginRight: 12,
+    position: 'relative',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  removeImageText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  addMoreButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+  },
+  addMoreText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  maxFilesReached: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+  },
+  maxFilesText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   submitButton: {
     borderRadius: 12,

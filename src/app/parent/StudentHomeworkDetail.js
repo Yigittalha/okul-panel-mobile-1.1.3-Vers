@@ -209,14 +209,45 @@ const StudentHomeworkDetail = () => {
     return `${numericPoints} puan`;
   };
 
-  const openPhoto = () => {
-    if (homework.Fotograf) {
-      const photoUrl = getUploadUrl(homework.Fotograf, schoolCode);
-      if (photoUrl) {
-        Linking.openURL(photoUrl).catch(() => {
-          Alert.alert("Hata", "Fotoğraf açılamadı.");
-        });
+  // Fotoğraf verilerini farklı formatlardan al
+  const getImages = (homework) => {
+    // Yeni format: Array
+    if (homework.Fotograf && Array.isArray(homework.Fotograf)) {
+      return homework.Fotograf;
+    }
+
+    // Eski format: String'i array'e çevir
+    if (homework.Fotograf && typeof homework.Fotograf === 'string') {
+      return [homework.Fotograf];
+    }
+
+    // Backend format: JSON parse et
+    if (homework.images) {
+      try {
+        if (typeof homework.images === 'string') {
+          const parsed = JSON.parse(homework.images);
+          return Array.isArray(parsed) ? parsed : [];
+        }
+        if (Array.isArray(homework.images)) {
+          return homework.images;
+        }
+      } catch (error) {
+        console.log('JSON parse hatası:', error);
+        return [];
       }
+    }
+
+    return [];
+  };
+
+  const openPhoto = (imageIndex = 0) => {
+    const images = getImages(homework);
+    if (images.length > 0) {
+      navigation.navigate('PhotoViewer', {
+        images,
+        selectedIndex: imageIndex,
+        schoolCode
+      });
     }
   };
 
@@ -423,29 +454,47 @@ const StudentHomeworkDetail = () => {
         </View>
 
         {/* Photo Card */}
-        {homework.Fotograf && (
+        {getImages(homework).length > 0 && (
           <View style={[styles.infoCard, { backgroundColor: theme.card }]}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              📷 Ödev Fotoğrafı
+              📷 Ödev Dosyaları ({getImages(homework).length})
             </Text>
 
-            <TouchableOpacity style={styles.photoContainer} onPress={openPhoto}>
-              <Image
-                source={{ uri: getUploadUrl(homework.Fotograf, schoolCode) }}
-                style={styles.photoImage}
-                resizeMode="cover"
-              />
-              <View
-                style={[
-                  styles.photoOverlay,
-                  { backgroundColor: theme.background + "80" },
-                ]}
-              >
-                <Text style={[styles.photoOverlayText, { color: theme.text }]}>
-                  👆 Fotoğrafı büyütmek için dokunun
-                </Text>
-              </View>
-            </TouchableOpacity>
+            <View style={styles.photoGrid}>
+              {getImages(homework).map((image, index) => {
+                const isPDF = image && typeof image === 'string' && image.toLowerCase().endsWith('.pdf');
+                
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.photoGridItem}
+                    onPress={() => openPhoto(index)}
+                    activeOpacity={0.8}
+                  >
+                    {isPDF ? (
+                      <View style={[styles.pdfGridItem, { backgroundColor: theme.background }]}>
+                        <Text style={[styles.pdfGridIcon, { color: theme.accent }]}>📄</Text>
+                        <Text style={[styles.pdfGridName, { color: theme.text }]} numberOfLines={2}>
+                          {image}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Image
+                        source={{ uri: getUploadUrl(image, schoolCode) }}
+                        style={styles.photoGridImage}
+                        resizeMode="cover"
+                      />
+                    )}
+                    
+                    <View style={[styles.photoGridOverlay, { backgroundColor: theme.background + "80" }]}>
+                      <Text style={[styles.photoGridOverlayText, { color: theme.text }]}>
+                        👆
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         )}
       </ScrollView>
@@ -627,6 +676,54 @@ const styles = StyleSheet.create({
   photoOverlayText: {
     fontSize: 12,
     fontWeight: "500",
+  },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 12,
+  },
+  photoGridItem: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  photoGridImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  pdfGridItem: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 4,
+  },
+  pdfGridIcon: {
+    fontSize: 24,
+    marginBottom: 2,
+  },
+  pdfGridName: {
+    fontSize: 8,
+    textAlign: 'center',
+    lineHeight: 10,
+  },
+  photoGridOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  photoGridOverlayText: {
+    fontSize: 16,
   },
   pointsInfoContainer: {
     padding: 18,

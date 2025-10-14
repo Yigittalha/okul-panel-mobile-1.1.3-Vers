@@ -160,7 +160,14 @@ export default function AttendanceLesson() {
   const processBatchSend = useCallback(async () => {
     const attendanceEntries = Object.entries(attendanceData);
     // Durum 1 olanları filtrele (gönderme)
-    const filteredEntries = attendanceEntries.filter(([ogrenciId, durum]) => durum !== 1);
+    let filteredEntries = attendanceEntries.filter(([ogrenciId, durum]) => durum !== 1);
+    
+    // Eğer hiç gönderilecek kayıt yoksa (tüm öğrenciler "Burada"), ilk öğrenciyi gönder
+    if (filteredEntries.length === 0 && attendanceEntries.length > 0) {
+      const firstStudent = attendanceEntries[0];
+      filteredEntries = [[firstStudent[0], 1]]; // İlk öğrenciyi "Burada" olarak gönder
+    }
+    
     let successCount = 0;
     let errorCount = 0;
     
