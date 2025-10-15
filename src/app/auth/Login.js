@@ -12,6 +12,7 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import api from "../../lib/api";
 import { getToken } from "../../lib/storage";
 import { darkBlue, yellow } from "../../constants/colors";
@@ -19,12 +20,18 @@ import { SessionContext } from "../../state/session";
 import { useTheme } from "../../state/theme";
 
 const Login = () => {
+  const navigation = useNavigation();
   const { schoolCode, schoolPhoto, setSession } = useContext(SessionContext);
   const { theme, isDark, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const isDemo = schoolCode === "demo";
+
+  // Şifremi unuttum sayfasına yönlendir
+  const handleForgotPassword = () => {
+    navigation.navigate('ForgotPasswordType');
+  };
 
 
   const handleLogin = async (overrideEmail, overridePassword) => {
@@ -231,6 +238,18 @@ const Login = () => {
           </TouchableOpacity>
           )}
 
+          {!isDemo && (
+            <TouchableOpacity
+              style={styles.forgotPasswordButton}
+              onPress={handleForgotPassword}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.forgotPasswordText, { color: theme.textSecondary }]}>
+                Şifremi Unuttum
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {isDemo && (
             ['Öğretmen','Öğrenci','Yönetici'].map((label) => (
               <TouchableOpacity
@@ -351,6 +370,16 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: "bold",
+  },
+  forgotPasswordButton: {
+    alignItems: "center",
+    marginTop: 15,
+    paddingVertical: 10,
+  },
+  forgotPasswordText: {
+    fontSize: 16,
+    fontWeight: "500",
+    textDecorationLine: "underline",
   },
 });
 

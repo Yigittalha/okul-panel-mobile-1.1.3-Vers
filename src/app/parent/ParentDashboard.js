@@ -165,7 +165,12 @@ const ParentDashboard = () => {
           <Text style={[styles.backIcon, { color: theme.text }]}>←</Text>
         </TouchableOpacity>
 
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={() => navigation.navigate("ParentProfile")}
+        >
+          <Text style={[styles.profileIcon, { color: theme.text }]}>👤</Text>
+        </TouchableOpacity>
       </View>
 
       <RefreshableScrollView
@@ -175,43 +180,45 @@ const ParentDashboard = () => {
         onRefresh={handleRefresh}
         contentContainerStyle={{ paddingBottom: 120 }} // Alt menü için daha fazla boşluk
       >
-        <View
-          style={[
-            styles.studentCard,
-            { backgroundColor: theme.card, borderColor: theme.accent },
-          ]}
-        >
-          {/* Student photo display */}
-          <View style={styles.avatarContainer}>
-            {(() => {
-              const photoUrl = getStudentPhotoUrl();
+        {/* Modern Student Card */}
+        <View style={[styles.studentCard, { backgroundColor: theme.card }]}>
+          <View style={styles.avatarBackground}>
+            <View style={styles.avatarContainer}>
+              {(() => {
+                const photoUrl = getStudentPhotoUrl();
 
-              if (photoUrl) {
-                return (
-                  <Image source={{ uri: photoUrl }} style={styles.userPhoto} />
-                );
-              } else {
-                return (
-                  <View
-                    style={[styles.avatar, { backgroundColor: theme.accent }]}
-                  >
-                    <Text style={styles.avatarText}>
-                      {getGenderText(studentData?.Cinsiyet) === "Erkek"
-                        ? "👦"
-                        : "👧"}
-                    </Text>
-                  </View>
-                );
-              }
-            })()}
+                if (photoUrl) {
+                  return (
+                    <Image source={{ uri: photoUrl }} style={styles.userPhoto} />
+                  );
+                } else {
+                  return (
+                    <View
+                      style={[styles.avatar, { backgroundColor: theme.accent }]}
+                    >
+                      <Text style={styles.avatarText}>
+                        {getGenderText(studentData?.Cinsiyet) === "Erkek"
+                          ? "👦"
+                          : "👧"}
+                      </Text>
+                    </View>
+                  );
+                }
+              })()}
+            </View>
           </View>
 
-          <Text style={[styles.studentName, { color: theme.text }]}>
-            {studentData?.AdSoyad}
-          </Text>
-          <Text style={[styles.classInfo, { color: theme.text }]}>
-            📚 {studentData?.Sinif} - No: {studentData?.OgrenciNumara}
-          </Text>
+          <View style={styles.profileInfo}>
+            <Text style={[styles.studentName, { color: theme.text }]}>
+              {studentData?.AdSoyad}
+            </Text>
+            <Text style={[styles.classInfo, { color: theme.textSecondary }]}>
+              📚 {studentData?.Sinif} Sınıfı
+            </Text>
+            <Text style={[styles.studentNumber, { color: theme.muted }]}>
+              Öğrenci No: {studentData?.OgrenciNumara}
+            </Text>
+          </View>
 
           {schoolCode && (
             <View
@@ -224,138 +231,186 @@ const ParentDashboard = () => {
           )}
         </View>
 
+        {/* Modern Info Card */}
         <View style={[styles.infoCard, { backgroundColor: theme.card }]}>
-          <Text style={[styles.cardTitle, { color: theme.text }]}>
-            👤 Öğrenci Bilgileri
-          </Text>
-
-          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.infoLabel, { color: theme.text }]}>
-              🆔 TC Kimlik:
+          <View style={styles.cardHeader}>
+            <View style={styles.cardTitleLine} />
+            <Text style={[styles.cardTitle, { color: theme.text }]}>
+              👤 Öğrenci Bilgileri
             </Text>
-            <Text style={[styles.infoValue, { color: theme.text }]}>
-              {studentData?.TCKimlikNo ? studentData.TCKimlikNo.substring(0, 4) + '*******' : ''}
-            </Text>
+            <View style={styles.cardTitleLine} />
           </View>
 
-          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.infoLabel, { color: theme.text }]}>
-              👤 Cinsiyet:
-            </Text>
-            <Text style={[styles.infoValue, { color: theme.text }]}>
-              {getGenderText(studentData?.Cinsiyet)}
-            </Text>
+          <View style={styles.infoGrid}>
+            <View style={[styles.infoItem, { backgroundColor: theme.background }]}>
+              <Text style={[styles.infoIcon, { color: theme.accent }]}>🆔</Text>
+              <View style={styles.infoContent}>
+                <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>
+                  TC Kimlik
+                </Text>
+                <Text style={[styles.infoValue, { color: theme.text }]}>
+                  {studentData?.TCKimlikNo ? studentData.TCKimlikNo.substring(0, 4) + '*******' : ''}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.infoItem, { backgroundColor: theme.background }]}>
+              <Text style={[styles.infoIcon, { color: theme.accent }]}>👤</Text>
+              <View style={styles.infoContent}>
+                <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>
+                  Cinsiyet
+                </Text>
+                <Text style={[styles.infoValue, { color: theme.text }]}>
+                  {getGenderText(studentData?.Cinsiyet)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.infoItem, { backgroundColor: theme.background }]}>
+              <Text style={[styles.infoIcon, { color: theme.accent }]}>🎂</Text>
+              <View style={styles.infoContent}>
+                <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>
+                  Doğum Tarihi
+                </Text>
+                <Text style={[styles.infoValue, { color: theme.text }]}>
+                  {formatDate(studentData?.DogumTarihi)}
+                </Text>
+              </View>
+            </View>
           </View>
-
-          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.infoLabel, { color: theme.text }]}>
-              🎂 Doğum Tarihi:
-            </Text>
-            <Text style={[styles.infoValue, { color: theme.text }]}>
-              {formatDate(studentData?.DogumTarihi)}
-            </Text>
-          </View>
-
-
         </View>
 
+        {/* Modern Family Card */}
         <View style={[styles.familyCard, { backgroundColor: theme.card }]}>
-          <Text style={[styles.cardTitle, { color: theme.text }]}>
-            👨‍👩‍👧‍👦 Aile Bilgileri
-          </Text>
-
-          <View
-            style={[styles.parentSection, { borderBottomColor: theme.border }]}
-          >
-            <Text style={[styles.parentTitle, { color: theme.text }]}>
-              👩 Anne Bilgileri
+          <View style={styles.cardHeader}>
+            <View style={styles.cardTitleLine} />
+            <Text style={[styles.cardTitle, { color: theme.text }]}>
+              👨‍👩‍👧‍👦 Aile Bilgileri
             </Text>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.text }]}>
-                📝 Ad Soyad:
-              </Text>
-              <Text style={[styles.infoValue, { color: theme.text }]}>
-                {studentData?.AnneAdSoyad}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.text }]}>
-                🎓 Eğitim:
-              </Text>
-              <Text style={[styles.infoValue, { color: theme.text }]}>
-                {studentData?.AnneEgitim}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.text }]}>
-                💼 Meslek:
-              </Text>
-              <Text style={[styles.infoValue, { color: theme.text }]}>
-                {studentData?.AnneMeslek}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.text }]}>
-                📱 Telefon:
-              </Text>
-              <Text style={[styles.infoValue, { color: theme.text }]}>
-                {studentData?.AnneTel}
-              </Text>
+            <View style={styles.cardTitleLine} />
+          </View>
+
+          {/* Anne Bilgileri */}
+          <View style={[styles.parentSection, { backgroundColor: theme.background }]}>
+            <View style={styles.parentInfoGrid}>
+              <View style={[styles.parentInfoItem, { backgroundColor: theme.card }]}>
+                <Text style={[styles.parentInfoIcon, { color: theme.accent }]}>📝</Text>
+                <View style={styles.parentInfoContent}>
+                  <Text style={[styles.parentInfoLabel, { color: theme.textSecondary }]}>
+                    Ad Soyad
+                  </Text>
+                  <Text style={[styles.parentInfoValue, { color: theme.text }]}>
+                    {studentData?.AnneAdSoyad}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.parentInfoItem, { backgroundColor: theme.card }]}>
+                <Text style={[styles.parentInfoIcon, { color: theme.accent }]}>🎓</Text>
+                <View style={styles.parentInfoContent}>
+                  <Text style={[styles.parentInfoLabel, { color: theme.textSecondary }]}>
+                    Eğitim
+                  </Text>
+                  <Text style={[styles.parentInfoValue, { color: theme.text }]}>
+                    {studentData?.AnneEgitim}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.parentInfoItem, { backgroundColor: theme.card }]}>
+                <Text style={[styles.parentInfoIcon, { color: theme.accent }]}>💼</Text>
+                <View style={styles.parentInfoContent}>
+                  <Text style={[styles.parentInfoLabel, { color: theme.textSecondary }]}>
+                    Meslek
+                  </Text>
+                  <Text style={[styles.parentInfoValue, { color: theme.text }]}>
+                    {studentData?.AnneMeslek}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.parentInfoItem, { backgroundColor: theme.card }]}>
+                <Text style={[styles.parentInfoIcon, { color: theme.accent }]}>📱</Text>
+                <View style={styles.parentInfoContent}>
+                  <Text style={[styles.parentInfoLabel, { color: theme.textSecondary }]}>
+                    Telefon
+                  </Text>
+                  <Text style={[styles.parentInfoValue, { color: theme.text }]}>
+                    {studentData?.AnneTel}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
 
-          <View
-            style={[styles.parentSection, { borderBottomColor: theme.border }]}
-          >
-            <Text style={[styles.parentTitle, { color: theme.text }]}>
-              👨 Baba Bilgileri
-            </Text>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.text }]}>
-                📝 Ad Soyad:
-              </Text>
-              <Text style={[styles.infoValue, { color: theme.text }]}>
-                {studentData?.BabaAdSoyad}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.text }]}>
-                🎓 Eğitim:
-              </Text>
-              <Text style={[styles.infoValue, { color: theme.text }]}>
-                {studentData?.BabaEgitim}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.text }]}>
-                💼 Meslek:
-              </Text>
-              <Text style={[styles.infoValue, { color: theme.text }]}>
-                {studentData?.BabaMeslek}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.text }]}>
-                📱 Telefon:
-              </Text>
-              <Text style={[styles.infoValue, { color: theme.text }]}>
-                {studentData?.BabaTel}
-              </Text>
+          {/* Baba Bilgileri */}
+          <View style={[styles.parentSection, { backgroundColor: theme.background }]}>
+            <View style={styles.parentInfoGrid}>
+              <View style={[styles.parentInfoItem, { backgroundColor: theme.card }]}>
+                <Text style={[styles.parentInfoIcon, { color: theme.accent }]}>📝</Text>
+                <View style={styles.parentInfoContent}>
+                  <Text style={[styles.parentInfoLabel, { color: theme.textSecondary }]}>
+                    Ad Soyad
+                  </Text>
+                  <Text style={[styles.parentInfoValue, { color: theme.text }]}>
+                    {studentData?.BabaAdSoyad}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.parentInfoItem, { backgroundColor: theme.card }]}>
+                <Text style={[styles.parentInfoIcon, { color: theme.accent }]}>🎓</Text>
+                <View style={styles.parentInfoContent}>
+                  <Text style={[styles.parentInfoLabel, { color: theme.textSecondary }]}>
+                    Eğitim
+                  </Text>
+                  <Text style={[styles.parentInfoValue, { color: theme.text }]}>
+                    {studentData?.BabaEgitim}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.parentInfoItem, { backgroundColor: theme.card }]}>
+                <Text style={[styles.parentInfoIcon, { color: theme.accent }]}>💼</Text>
+                <View style={styles.parentInfoContent}>
+                  <Text style={[styles.parentInfoLabel, { color: theme.textSecondary }]}>
+                    Meslek
+                  </Text>
+                  <Text style={[styles.parentInfoValue, { color: theme.text }]}>
+                    {studentData?.BabaMeslek}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.parentInfoItem, { backgroundColor: theme.card }]}>
+                <Text style={[styles.parentInfoIcon, { color: theme.accent }]}>📱</Text>
+                <View style={styles.parentInfoContent}>
+                  <Text style={[styles.parentInfoLabel, { color: theme.textSecondary }]}>
+                    Telefon
+                  </Text>
+                  <Text style={[styles.parentInfoValue, { color: theme.text }]}>
+                    {studentData?.BabaTel}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
-
         </View>
 
 
-        {/* Şifre Değiştir Butonu */}
-        <TouchableOpacity
-          style={[styles.passwordButton, { backgroundColor: theme.accent }]}
-          onPress={() => navigation.navigate("PasswordChange")}
-        >
-          <Text style={[styles.passwordButtonText, { color: theme.primary }]}>
-            🔐 Şifreyi Değiştir
-          </Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.accent }]}
+            onPress={() => navigation.navigate("PasswordChange")}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.actionButtonIcon, { color: theme.primary }]}>🔐</Text>
+            <Text style={[styles.actionButtonText, { color: theme.primary }]}>
+              Şifreyi Değiştir
+            </Text>
+          </TouchableOpacity>
+        </View>
       </RefreshableScrollView>
       
       {/* Alt Menü */}
@@ -414,65 +469,119 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 48,
   },
+  profileButton: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  profileIcon: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
   content: {
     flex: 1,
     padding: 20,
   },
   studentCard: {
-    borderWidth: 2,
     borderRadius: 20,
-    padding: 25,
+    padding: 24,
     alignItems: "center",
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  avatarBackground: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 214, 10, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   avatarContainer: {
-    marginBottom: 15,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    overflow: 'hidden',
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     justifyContent: "center",
     alignItems: "center",
   },
   userPhoto: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     borderWidth: 3,
     borderColor: "#FFD60A",
   },
   avatarText: {
-    fontSize: 40,
+    fontSize: 36,
+  },
+  profileInfo: {
+    alignItems: "center",
+    marginBottom: 16,
   },
   studentName: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 5,
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 4,
+    textAlign: 'center',
   },
   classInfo: {
     fontSize: 16,
-    opacity: 0.8,
-    marginBottom: 10,
+    fontWeight: "500",
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  studentNumber: {
+    fontSize: 14,
+    fontWeight: "400",
+    marginBottom: 12,
+    textAlign: 'center',
   },
   schoolBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    shadowColor: '#FFD60A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   schoolText: {
-    fontSize: 12,
-    fontWeight: "bold",
+    fontSize: 14,
+    fontWeight: "600",
   },
   infoCard: {
-    borderRadius: 15,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   familyCard: {
-    borderRadius: 15,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   healthCard: {
     backgroundColor: "rgba(255, 100, 100, 0.1)",
@@ -482,20 +591,88 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  cardTitleLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
   cardTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
+    fontWeight: "700",
+    marginHorizontal: 16,
+    textAlign: 'center',
+  },
+  infoGrid: {
+    gap: 12,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  infoIcon: {
+    fontSize: 24,
+    marginRight: 16,
+    width: 32,
+    textAlign: 'center',
+  },
+  infoContent: {
+    flex: 1,
   },
   parentSection: {
     marginBottom: 20,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
+    padding: 16,
+    borderRadius: 12,
   },
   parentTitle: {
     fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  parentInfoGrid: {
+    gap: 12,
+  },
+  parentInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  parentInfoIcon: {
+    fontSize: 24,
+    marginRight: 16,
+    width: 32,
+    textAlign: 'center',
+  },
+  parentInfoContent: {
+    flex: 1,
+  },
+  parentInfoLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 4,
+    color: '#666',
+  },
+  parentInfoValue: {
+    fontSize: 16,
+    fontWeight: "600",
   },
   infoRow: {
     flexDirection: "row",
@@ -504,15 +681,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   infoLabel: {
-    fontSize: 13,
-    opacity: 0.8,
-    flex: 1,
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 4,
+    color: '#666',
   },
   infoValue: {
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: "600",
-    flex: 1,
-    textAlign: "right",
   },
   errorText: {
     fontSize: 16,
@@ -520,22 +696,30 @@ const styles = StyleSheet.create({
     textAlign: "center",
     padding: 20,
   },
-  passwordButton: {
-    borderRadius: 12,
+  actionButtons: {
+    marginTop: 20,
+    gap: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 16,
     paddingHorizontal: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 12,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  passwordButtonText: {
-    fontSize: 18,
-    fontWeight: "bold",
+  actionButtonIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

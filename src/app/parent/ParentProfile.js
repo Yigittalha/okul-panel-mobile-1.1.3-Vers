@@ -17,48 +17,38 @@ import { useTheme } from "../../state/theme";
 import { useSlideMenu } from "../../navigation/SlideMenuContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RefreshableScrollView from "../../components/RefreshableScrollView";
-// TeacherBottomMenu artık AppDrawer'da wrapper ile ekleniyor
 
-// SlideMenu import'u kaldırıldı - döngüsel bağımlılık çözümü
-
-const Profile = () => {
+const ParentProfile = () => {
   const navigation = useNavigation();
   const { schoolCode, clearSession } = useContext(SessionContext);
   const { theme, isDark, toggleTheme } = useTheme();
   const { openMenu } = useSlideMenu();
   const insets = useSafeAreaInsets();
-  const [teacherData, setTeacherData] = useState(null);
+  const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  // menuVisible state'i kaldırıldı - döngüsel bağımlılık çözümü
-
-  const fetchTeacherData = async () => {
+  const fetchStudentData = async () => {
     try {
-      const data = await fetchUserInfo(true); // showErrors true olarak ayarlandı
+      const data = await fetchUserInfo(true);
 
       if (data) {
-        setTeacherData(data);
-        setError(null); // Hata durumunu temizle
+        setStudentData(data);
+        setError(null);
         
-        // FCM token'ı backend'e gönder (login sonrası)
         if (global.sendFCMTokenAfterLogin) {
-          console.log('🔥 Öğretmen girişi başarılı, FCM token gönderiliyor...');
+          console.log('🔥 Öğrenci girişi başarılı, FCM token gönderiliyor...');
           global.sendFCMTokenAfterLogin(data);
         }
       } else {
-        setError("Kullanıcı bilgileri alınamadı. Lütfen tekrar giriş yapın.");
-
-        // Oturumu sonlandır
+        setError("Öğrenci bilgileri alınamadı. Lütfen tekrar giriş yapın.");
         setTimeout(() => {
           clearSession();
         }, 2000);
       }
     } catch (error) {
       setError("Sistem hatası oluştu. Lütfen tekrar giriş yapın.");
-
-      // Oturumu sonlandır
       setTimeout(() => {
         clearSession();
       }, 2000);
@@ -68,15 +58,13 @@ const Profile = () => {
     }
   };
 
-  // İlk veriyi çekme işlemi
   useEffect(() => {
-    fetchTeacherData();
-    // Otomatik döngüsel yenileme kaldırıldı - sadece manuel yenileme aktif
+    fetchStudentData();
   }, []);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchTeacherData();
+    fetchStudentData();
   };
 
   const formatDate = (dateString) => {
@@ -89,31 +77,21 @@ const Profile = () => {
 
   const getUserPhotoUrl = () => {
     try {
-      if (!teacherData) {
+      if (!studentData) {
         return null;
       }
 
-      if (!teacherData?.Fotograf) {
+      if (!studentData?.Fotograf) {
         return null;
       }
 
-      // Fotoğraf string'i geldi mi kontrol et
-      if (
-        typeof teacherData.Fotograf !== "string" ||
-        teacherData.Fotograf.trim() === ""
-      ) {
-        return null;
+      if (typeof studentData.Fotograf === "string") {
+        return getUploadUrl(studentData.Fotograf, schoolCode);
       }
 
-      const photoUrl = getUploadUrl(teacherData.Fotograf, schoolCode);
-
-      // URL oluşturulduysa kullan, yoksa null döndür
-      if (!photoUrl) {
-        return null;
-      }
-
-      return photoUrl;
+      return null;
     } catch (error) {
+      console.log("❌ Fotoğraf URL oluşturma hatası:", error);
       return null;
     }
   };
@@ -141,17 +119,17 @@ const Profile = () => {
     );
   }
 
-  if (!teacherData) {
+  if (!studentData) {
     return (
       <View
         style={[styles.loadingContainer, { backgroundColor: theme.background }]}
       >
         <Text style={[styles.loadingText, { color: theme.text }]}>
-          Öğretmen bilgileri bulunamadı
+          Öğrenci bilgileri bulunamadı
         </Text>
         <TouchableOpacity
           style={[styles.retryButton, { backgroundColor: theme.accent }]}
-          onPress={fetchTeacherData}
+          onPress={fetchStudentData}
         >
           <Text style={[styles.retryText, { color: theme.primary }]}>
             Tekrar Dene
@@ -163,12 +141,12 @@ const Profile = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Header kısmını eski haline getir */}
+      {/* Header */}
       <View style={[
         styles.header, 
         { 
           borderBottomColor: theme.border,
-          paddingTop: Math.max(insets.top + 10, 44), // Improved safe area padding
+          paddingTop: Math.max(insets.top + 10, 44),
         }
       ]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -183,7 +161,7 @@ const Profile = () => {
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
         onRefresh={handleRefresh}
-        contentContainerStyle={{ paddingBottom: 120 }} // Alt menü için daha fazla boşluk
+        contentContainerStyle={{ paddingBottom: 120 }}
       >
         {/* Modern Profile Card */}
         <View style={[styles.profileCard, { backgroundColor: theme.card }]}>
@@ -197,7 +175,7 @@ const Profile = () => {
                 />
               ) : (
                 <View style={[styles.avatar, { backgroundColor: theme.accent }]}>
-                  <Text style={styles.avatarText}>👩‍🏫</Text>
+                  <Text style={styles.avatarText}>👨‍🎓</Text>
                 </View>
               )}
             </View>
@@ -205,13 +183,13 @@ const Profile = () => {
 
           <View style={styles.profileInfo}>
             <Text style={[styles.name, { color: theme.text }]}>
-              {teacherData?.AdSoyad}
+              {studentData?.AdSoyad}
             </Text>
             <Text style={[styles.department, { color: theme.textSecondary }]}>
-              {teacherData?.Bolum} Öğretmeni
+              {studentData?.Sinif} Sınıfı
             </Text>
             <Text style={[styles.teacherId, { color: theme.muted }]}>
-              ID: {teacherData?.OgretmenID}
+              Öğrenci No: {studentData?.OgrenciNumara}
             </Text>
           </View>
 
@@ -242,7 +220,7 @@ const Profile = () => {
                   E-posta
                 </Text>
                 <Text style={[styles.infoValue, { color: theme.text }]}>
-                  {teacherData?.Eposta}
+                  {studentData?.Eposta}
                 </Text>
               </View>
             </View>
@@ -254,7 +232,7 @@ const Profile = () => {
                   Telefon
                 </Text>
                 <Text style={[styles.infoValue, { color: theme.text }]}>
-                  {teacherData?.Telefon}
+                  {studentData?.Telefon}
                 </Text>
               </View>
             </View>
@@ -266,7 +244,7 @@ const Profile = () => {
                   TC Kimlik
                 </Text>
                 <Text style={[styles.infoValue, { color: theme.text }]}>
-                  {teacherData?.TCKimlikNo}
+                  {studentData?.TCKimlikNo}
                 </Text>
               </View>
             </View>
@@ -278,7 +256,7 @@ const Profile = () => {
                   Cinsiyet
                 </Text>
                 <Text style={[styles.infoValue, { color: theme.text }]}>
-                  {getGenderText(teacherData?.Cinsiyet)}
+                  {getGenderText(studentData?.Cinsiyet)}
                 </Text>
               </View>
             </View>
@@ -290,7 +268,7 @@ const Profile = () => {
                   Doğum Tarihi
                 </Text>
                 <Text style={[styles.infoValue, { color: theme.text }]}>
-                  {formatDate(teacherData?.DogumTarihi)}
+                  {formatDate(studentData?.DogumTarihi)}
                 </Text>
               </View>
             </View>
@@ -312,10 +290,6 @@ const Profile = () => {
         </View>
 
       </RefreshableScrollView>
-
-      {/* SlideMenu bileşeni kaldırıldı - döngüsel bağımlılık çözümü */}
-      
-      {/* TeacherBottomMenu artık AppDrawer'da wrapper ile ekleniyor */}
     </View>
   );
 };
@@ -364,9 +338,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   placeholder: {
-    width: 44, // Menu button ile aynı genişlik
+    width: 44,
   },
-
   content: {
     flex: 1,
     padding: 20,
@@ -542,4 +515,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Profile;
+export default ParentProfile;

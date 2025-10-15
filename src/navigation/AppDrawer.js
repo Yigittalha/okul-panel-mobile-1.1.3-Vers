@@ -68,6 +68,8 @@ import StudentMessageInbox from "../app/student/StudentMessageInbox";
 import PasswordChangeScreen from "../app/common/PasswordChangeScreen";
 // Import PhotoViewer screen
 import PhotoViewer from "../app/common/PhotoViewer";
+// Import ParentProfile screen
+import ParentProfile from "../app/parent/ParentProfile";
 
 const Stack = createNativeStackNavigator();
 
@@ -271,6 +273,7 @@ export default function AppDrawer() {
           <Stack.Screen name="StudentMessageInbox" component={StudentMessageInbox} />
           <Stack.Screen name="PasswordChange" component={PasswordChangeScreen} />
           <Stack.Screen name="PhotoViewer" component={PhotoViewer} />
+          <Stack.Screen name="ParentProfile" component={ParentProfile} />
         </>
       )}
     </Stack.Navigator>

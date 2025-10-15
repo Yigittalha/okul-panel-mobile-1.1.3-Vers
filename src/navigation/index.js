@@ -8,6 +8,13 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SessionContext } from "../state/session";
 import SchoolSelect from "../app/auth/SchoolSelect";
 import Login from "../app/auth/Login";
+import ForgotPasswordType from "../app/auth/ForgotPasswordType";
+import ForgotPasswordEmail from "../app/auth/ForgotPasswordEmail";
+import ForgotPasswordVerify from "../app/auth/ForgotPasswordVerify";
+import ForgotPasswordNew from "../app/auth/ForgotPasswordNew";
+import ForgotPasswordStudentPhone from "../app/auth/ForgotPasswordStudentPhone";
+import ForgotPasswordStudentVerify from "../app/auth/ForgotPasswordStudentVerify";
+import ForgotPasswordStudentNew from "../app/auth/ForgotPasswordStudentNew";
 import AppDrawer from "./AppDrawer";
 import SlideMenu from "./SlideMenu";
 import { useTheme } from "../state/theme";
@@ -21,6 +28,13 @@ function AuthStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="SchoolSelect" component={SchoolSelect} />
       <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="ForgotPasswordType" component={ForgotPasswordType} />
+      <Stack.Screen name="ForgotPasswordEmail" component={ForgotPasswordEmail} />
+      <Stack.Screen name="ForgotPasswordVerify" component={ForgotPasswordVerify} />
+      <Stack.Screen name="ForgotPasswordNew" component={ForgotPasswordNew} />
+      <Stack.Screen name="ForgotPasswordStudentPhone" component={ForgotPasswordStudentPhone} />
+      <Stack.Screen name="ForgotPasswordStudentVerify" component={ForgotPasswordStudentVerify} />
+      <Stack.Screen name="ForgotPasswordStudentNew" component={ForgotPasswordStudentNew} />
     </Stack.Navigator>
   );
 }
