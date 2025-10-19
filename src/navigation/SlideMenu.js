@@ -159,6 +159,7 @@ export default function SlideMenu() {
       sinavlarim: "create-outline",
       notlarim: "bar-chart-outline",
       odevlerim: "clipboard-outline",
+      "deneme-sonuclari": "trending-up-outline",
       devamsizlik: "warning-outline",
       "mesaj-gonder": "send-outline",
       "gelen-kutusu": "mail-outline",

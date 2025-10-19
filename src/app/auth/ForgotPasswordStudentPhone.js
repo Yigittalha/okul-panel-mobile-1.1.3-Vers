@@ -9,6 +9,9 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '../../state/theme';
@@ -72,7 +75,7 @@ const ForgotPasswordStudentPhone = () => {
       const data = await response.json();
       
       if (data === "0x399") {
-        Alert.alert('Hata', 'Böyle bir telefon numarası bulunamadı');
+        Alert.alert('Hata', 'Telefon numarası veya öğrenci numarası bulunamadı');
       } else if (data === true) {
         navigation.navigate('ForgotPasswordStudentVerify', { 
           userType, 
@@ -104,72 +107,85 @@ const ForgotPasswordStudentPhone = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.titleContainer}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Telefon Numaranızı Girin
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Öğrenci hesabınız için kayıtlı telefon numaranızı ve öğrenci numaranızı giriniz
-          </Text>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.text }]}>
-            Telefon Numarası
-          </Text>
-          <TextInput
-            style={[styles.input, { 
-              backgroundColor: theme.card, 
-              color: theme.text,
-              borderColor: theme.border 
-            }]}
-            placeholder="05551234567"
-            placeholderTextColor={theme.textSecondary}
-            value={phone}
-            onChangeText={handlePhoneChange}
-            keyboardType="phone-pad"
-            maxLength={11}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.text }]}>
-            Öğrenci Numarası
-          </Text>
-          <TextInput
-            style={[styles.input, { 
-              backgroundColor: theme.card, 
-              color: theme.text,
-              borderColor: theme.border 
-            }]}
-            placeholder="1234"
-            placeholderTextColor={theme.textSecondary}
-            value={studentNo}
-            onChangeText={handleStudentNoChange}
-            keyboardType="numeric"
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.continueButton, 
-            { backgroundColor: theme.accent },
-            loading && styles.disabledButton
-          ]}
-          onPress={handleSendSMS}
-          disabled={loading}
-          activeOpacity={0.8}
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {loading ? (
-            <ActivityIndicator color="#000" size="small" />
-          ) : (
-            <Text style={[styles.continueButtonText, { color: '#000' }]}>
-              Devam Et
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
+          <View style={styles.content}>
+            <View style={styles.titleContainer}>
+              <Text style={[styles.title, { color: theme.text }]}>
+                Telefon Numaranızı Girin
+              </Text>
+              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+                Öğrenci hesabınız için kayıtlı telefon numaranızı ve öğrenci numaranızı giriniz
+              </Text>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Telefon Numarası
+              </Text>
+              <TextInput
+                style={[styles.input, { 
+                  backgroundColor: theme.card, 
+                  color: theme.text,
+                  borderColor: theme.border 
+                }]}
+                placeholder="05551234567"
+                placeholderTextColor={theme.textSecondary}
+                value={phone}
+                onChangeText={handlePhoneChange}
+                keyboardType="phone-pad"
+                maxLength={11}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Öğrenci Numarası
+              </Text>
+              <TextInput
+                style={[styles.input, { 
+                  backgroundColor: theme.card, 
+                  color: theme.text,
+                  borderColor: theme.border 
+                }]}
+                placeholder="1234"
+                placeholderTextColor={theme.textSecondary}
+                value={studentNo}
+                onChangeText={handleStudentNoChange}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.continueButton, 
+                { backgroundColor: theme.accent },
+                loading && styles.disabledButton
+              ]}
+              onPress={handleSendSMS}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#000" size="small" />
+              ) : (
+                <Text style={[styles.continueButtonText, { color: '#000' }]}>
+                  Devam Et
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -177,6 +193,16 @@ const ForgotPasswordStudentPhone = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',

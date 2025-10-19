@@ -15,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.huseyin22.schoolapp"
+      "bundleIdentifier": "com.huseyin22.schoolapp",
+      "workspace": "ios/OkulPanel.xcworkspace"
     },
     "android": {
       "adaptiveIcon": {

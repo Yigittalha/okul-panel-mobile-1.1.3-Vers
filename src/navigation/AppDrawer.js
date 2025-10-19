@@ -70,6 +70,9 @@ import PasswordChangeScreen from "../app/common/PasswordChangeScreen";
 import PhotoViewer from "../app/common/PhotoViewer";
 // Import ParentProfile screen
 import ParentProfile from "../app/parent/ParentProfile";
+// Import Student Trials screens
+import StudentTrials from "../app/student/StudentTrials";
+import StudentTrialDetail from "../app/student/StudentTrialDetail";
 
 const Stack = createNativeStackNavigator();
 
@@ -271,6 +274,8 @@ export default function AppDrawer() {
           <Stack.Screen name="StudentScheduleScreen" component={StudentScheduleScreen} />
           <Stack.Screen name="StudentMessageSend" component={StudentMessageSend} />
           <Stack.Screen name="StudentMessageInbox" component={StudentMessageInbox} />
+          <Stack.Screen name="StudentTrials" component={StudentTrials} />
+          <Stack.Screen name="StudentTrialDetail" component={StudentTrialDetail} />
           <Stack.Screen name="PasswordChange" component={PasswordChangeScreen} />
           <Stack.Screen name="PhotoViewer" component={PhotoViewer} />
           <Stack.Screen name="ParentProfile" component={ParentProfile} />

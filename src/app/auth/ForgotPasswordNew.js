@@ -9,6 +9,9 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Svg, Path } from 'react-native-svg';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -137,99 +140,112 @@ const ForgotPasswordNew = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.titleContainer}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Yeni Şifrenizi Belirleyin
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Güvenli bir şifre oluşturun
-          </Text>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.text }]}>
-            Yeni Şifre
-          </Text>
-          <View style={styles.passwordInputContainer}>
-            <TextInput
-              style={[styles.passwordInput, { 
-                backgroundColor: theme.card, 
-                color: theme.text,
-                borderColor: theme.border 
-              }]}
-              placeholder="Yeni şifrenizi girin"
-              placeholderTextColor={theme.textSecondary}
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-            />
-            <TouchableOpacity
-              style={styles.eyeButton}
-              onPress={() => setShowPassword(!showPassword)}
-              activeOpacity={0.7}
-            >
-              {showPassword ? (
-                <EyeOffIcon size={20} color={theme.textSecondary} />
-              ) : (
-                <EyeIcon size={20} color={theme.textSecondary} />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.text }]}>
-            Şifre Onayı
-          </Text>
-          <View style={styles.passwordInputContainer}>
-            <TextInput
-              style={[styles.passwordInput, { 
-                backgroundColor: theme.card, 
-                color: theme.text,
-                borderColor: theme.border 
-              }]}
-              placeholder="Şifrenizi tekrar"
-              placeholderTextColor={theme.textSecondary}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              autoCapitalize="none"
-            />
-            <TouchableOpacity
-              style={styles.eyeButton}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              activeOpacity={0.7}
-            >
-              {showConfirmPassword ? (
-                <EyeOffIcon size={20} color={theme.textSecondary} />
-              ) : (
-                <EyeIcon size={20} color={theme.textSecondary} />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.continueButton, 
-            { backgroundColor: theme.accent },
-            loading && styles.disabledButton
-          ]}
-          onPress={handleUpdatePassword}
-          disabled={loading}
-          activeOpacity={0.8}
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {loading ? (
-            <ActivityIndicator color="#000" size="small" />
-          ) : (
-            <Text style={[styles.continueButtonText, { color: '#000' }]}>
-              Şifreyi Güncelle
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
+          <View style={styles.content}>
+            <View style={styles.titleContainer}>
+              <Text style={[styles.title, { color: theme.text }]}>
+                Yeni Şifrenizi Belirleyin
+              </Text>
+              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+                Güvenli bir şifre oluşturun
+              </Text>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Yeni Şifre
+              </Text>
+              <View style={styles.passwordInputContainer}>
+                <TextInput
+                  style={[styles.passwordInput, { 
+                    backgroundColor: theme.card, 
+                    color: theme.text,
+                    borderColor: theme.border 
+                  }]}
+                  placeholder="Yeni şifrenizi girin"
+                  placeholderTextColor={theme.textSecondary}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                  activeOpacity={0.7}
+                >
+                  {showPassword ? (
+                    <EyeOffIcon size={20} color={theme.textSecondary} />
+                  ) : (
+                    <EyeIcon size={20} color={theme.textSecondary} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Şifre Onayı
+              </Text>
+              <View style={styles.passwordInputContainer}>
+                <TextInput
+                  style={[styles.passwordInput, { 
+                    backgroundColor: theme.card, 
+                    color: theme.text,
+                    borderColor: theme.border 
+                  }]}
+                  placeholder="Şifrenizi tekrar"
+                  placeholderTextColor={theme.textSecondary}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  activeOpacity={0.7}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOffIcon size={20} color={theme.textSecondary} />
+                  ) : (
+                    <EyeIcon size={20} color={theme.textSecondary} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.continueButton, 
+                { backgroundColor: theme.accent },
+                loading && styles.disabledButton
+              ]}
+              onPress={handleUpdatePassword}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#000" size="small" />
+              ) : (
+                <Text style={[styles.continueButtonText, { color: '#000' }]}>
+                  Şifreyi Güncelle
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -237,6 +253,16 @@ const ForgotPasswordNew = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',

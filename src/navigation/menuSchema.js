@@ -106,6 +106,7 @@ export const MENU_SCHEMA = {
         { key: "odevlerim", label: "Ödevlerim", route: "StudentHomeworkList" },
         { key: "sinavlarim", label: "Sınavlarım", route: "StudentExamsList" },
         { key: "notlarim", label: "Notlarım", route: "StudentGrades" },
+        { key: "deneme-sonuclari", label: "Deneme Sonuçlarım", route: "StudentTrials" },
       ],
     },
     {

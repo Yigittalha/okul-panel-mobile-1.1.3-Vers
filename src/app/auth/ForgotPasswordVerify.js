@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,11 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../../state/theme';
 import { SessionContext } from '../../state/session';
 // import api from '../../lib/api'; // Bu API'ler için token gerekmiyor
@@ -25,19 +28,35 @@ const ForgotPasswordVerify = () => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120);
+  const timerRef = useRef(null);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
+  // Timer temizleme fonksiyonu
+  const clearTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  // Timer başlatma fonksiyonu
+  const startTimer = () => {
+    clearTimer(); // Önce eski timer'ı temizle
+    setTimeLeft(120); // Süreyi sıfırla
+    
+    timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(timer);
+          clearTimer();
           Alert.alert(
             'Süre Doldu',
             'Doğrulama süresi doldu. Lütfen tekrar deneyin.',
             [
               {
                 text: 'Tamam',
-                onPress: () => navigation.navigate('ForgotPasswordType'),
+                onPress: () => {
+                  clearTimer();
+                  navigation.navigate('ForgotPasswordType');
+                },
               },
             ]
           );
@@ -46,9 +65,30 @@ const ForgotPasswordVerify = () => {
         return prev - 1;
       });
     }, 1000);
+  };
 
-    return () => clearInterval(timer);
-  }, [navigation]);
+  // Component mount olduğunda timer başlat
+  useEffect(() => {
+    startTimer();
+    
+    // Cleanup function - component unmount olduğunda timer'ı temizle
+    return () => {
+      clearTimer();
+    };
+  }, []);
+
+  // Sayfa focus/blur takibi
+  useFocusEffect(
+    React.useCallback(() => {
+      // Sayfa focus olduğunda timer başlat
+      startTimer();
+      
+      // Sayfa blur olduğunda timer'ı temizle
+      return () => {
+        clearTimer();
+      };
+    }, [])
+  );
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -81,20 +121,24 @@ const ForgotPasswordVerify = () => {
       const data = await response.json();
       
       if (data === false) {
+        clearTimer(); // Timer'ı temizle
         Alert.alert('Hata', 'Geçersiz doğrulama kodu');
         navigation.navigate('ForgotPasswordType');
       } else if (data === true) {
+        clearTimer(); // Başarılı doğrulama - timer'ı temizle
         navigation.navigate('ForgotPasswordNew', { 
           userType, 
           email,
           code 
         });
       } else {
+        clearTimer(); // Hata durumu - timer'ı temizle
         Alert.alert('Hata', 'Bir şeyler ters gitti, yeniden deneyin');
         navigation.navigate('ForgotPasswordType');
       }
     } catch (error) {
       console.error('Doğrulama hatası:', error);
+      clearTimer(); // Hata durumu - timer'ı temizle
       Alert.alert('Hata', 'Bir şeyler ters gitti, yeniden deneyin');
       navigation.navigate('ForgotPasswordType');
     } finally {
@@ -109,68 +153,84 @@ const ForgotPasswordVerify = () => {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            clearTimer(); // Geri butonuna basıldığında timer'ı temizle
+            navigation.goBack();
+          }}
           activeOpacity={0.7}
         >
           <Text style={[styles.backButtonText, { color: '#000000' }]}>← Geri</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.titleContainer}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Doğrulama Kodunu Girin
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            {email} adresine gönderilen 6 haneli doğrulama kodunu giriniz
-          </Text>
-        </View>
-
-        <View style={styles.timerContainer}>
-          <Text style={[styles.timerText, { color: theme.accent }]}>
-            Kalan Süre: {formatTime(timeLeft)}
-          </Text>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.text }]}>
-            Doğrulama Kodu
-          </Text>
-          <TextInput
-            style={[styles.codeInput, { 
-              backgroundColor: theme.card, 
-              color: theme.text,
-              borderColor: theme.border 
-            }]}
-            placeholder="123456"
-            placeholderTextColor={theme.textSecondary}
-            value={code}
-            onChangeText={setCode}
-            keyboardType="numeric"
-            maxLength={6}
-            textAlign="center"
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.continueButton, 
-            { backgroundColor: theme.accent },
-            loading && styles.disabledButton
-          ]}
-          onPress={handleVerifyCode}
-          disabled={loading}
-          activeOpacity={0.8}
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {loading ? (
-            <ActivityIndicator color="#000" size="small" />
-          ) : (
-            <Text style={[styles.continueButtonText, { color: '#000' }]}>
-              Devam Et
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
+          <View style={styles.content}>
+            <View style={styles.titleContainer}>
+              <Text style={[styles.title, { color: theme.text }]}>
+                Doğrulama Kodunu Girin
+              </Text>
+              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+                {email} adresine gönderilen 6 haneli doğrulama kodunu giriniz
+              </Text>
+            </View>
+
+            <View style={styles.timerContainer}>
+              <Text style={[styles.timerText, { color: theme.accent }]}>
+                Kalan Süre: {formatTime(timeLeft)}
+              </Text>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Doğrulama Kodu
+              </Text>
+              <TextInput
+                style={[styles.codeInput, { 
+                  backgroundColor: theme.card, 
+                  color: theme.text,
+                  borderColor: theme.border 
+                }]}
+                placeholder="123456"
+                placeholderTextColor={theme.textSecondary}
+                value={code}
+                onChangeText={setCode}
+                keyboardType="numeric"
+                maxLength={6}
+                textAlign="center"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.continueButton, 
+                { backgroundColor: theme.accent },
+                loading && styles.disabledButton
+              ]}
+              onPress={handleVerifyCode}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#000" size="small" />
+              ) : (
+                <Text style={[styles.continueButtonText, { color: '#000' }]}>
+                  Devam Et
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -178,6 +238,16 @@ const ForgotPasswordVerify = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
